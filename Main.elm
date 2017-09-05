@@ -3,7 +3,7 @@ import Html.Attributes exposing (href)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (string, Decoder)
-import Task exposing (attempt, succeed)
+import Task exposing (attempt, succeed, andThen)
 import Navigation
 import UrlParser as Url exposing ((</>), (<?>), s, int, string, stringParam, top)
 
@@ -20,12 +20,16 @@ main =
 -- MODEL
 
 type alias Model =
-  { userId : Maybe String
+  { photoIds : Maybe (List String)
   }
 
 decodeUserId : Decode.Decoder String
 decodeUserId =
     Decode.at ["user", "id"] Decode.string
+
+decodePublicPhotos : Decode.Decoder (List String)
+decodePublicPhotos =
+    Decode.at ["photos", "photo"] (Decode.list <| (Decode.at ["id"]) Decode.string)
 
 userIdUrl : String -> String
 userIdUrl n = "https://api.flickr.com/services/rest/?&method=flickr.people.findByUserName&api_key=859b1fdf671b6419805ec3d2c7578d70&username=" ++ n ++ "&format=json&nojsoncallback=1"
@@ -40,10 +44,11 @@ initModel r =
       Cmd.none
 
     Just (NameOnly n) -> 
-      Http.send SetUserId (Http.get (userIdUrl n) decodeUserId )
-
-    Just (NameAndAlbum n a) -> 
-      Http.send SetUserId (Http.get (userIdUrl n) decodeUserId )
+      let req = Http.get (userIdUrl n) decodeUserId 
+          userIdTask = Http.toTask req
+          publicPhotosTask uid = 
+              Http.toTask (Http.get (publicPhotosUrl uid) decodePublicPhotos)
+      in Task.attempt SetPhotoIds (userIdTask |> (andThen publicPhotosTask ))
 
   in (Model Nothing, cmd)
 
@@ -55,21 +60,19 @@ init location =
 
 type Route
   = NameOnly String
-  | NameAndAlbum String String
 
 
 route : Url.Parser (Route -> a) a
 route =
   Url.oneOf
     [ Url.map NameOnly Url.string
-    , Url.map NameAndAlbum (Url.string </> Url.string)
     ]
 
 -- UPDATE
 
 type Msg
   =   UrlChange Navigation.Location
-    | SetUserId (Result Http.Error String)
+    | SetPhotoIds (Result Http.Error (List String))
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -77,10 +80,10 @@ update msg model =
     UrlChange location ->
       initModel (Url.parseHash route location) 
 
-    SetUserId (Ok userId) ->
-      (Model (Just userId), Cmd.none)
+    SetPhotoIds (Ok photoIds) ->
+      (Model (Just photoIds), Cmd.none)
 
-    SetUserId (Err _) ->
+    SetPhotoIds (Err _) ->
       (model, Cmd.none)
 
 
@@ -95,8 +98,8 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
   div []
-    [ case model.userId of
-        Nothing -> text "No User Found"
-        Just uid -> text uid
+    [ case model.photoIds of
+        Nothing -> text "No User ID"
+        Just pids -> div [] (List.map (\id -> div [] [text id]) pids)
 
     ]
