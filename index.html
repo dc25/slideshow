@@ -9835,6 +9835,75 @@ var _evancz$url_parser$UrlParser$stringParam = function (name) {
 var _evancz$url_parser$UrlParser$intParam = function (name) {
 	return A2(_evancz$url_parser$UrlParser$customParam, name, _evancz$url_parser$UrlParser$intParamHelp);
 };
+var _user$project$Main$photoUrl = function (ps) {
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		'https://farm',
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			_elm_lang$core$Basics$toString(ps.farm),
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'.staticflickr.com/',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					ps.server,
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'/',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							ps.id,
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								'_',
+								A2(_elm_lang$core$Basics_ops['++'], ps.secret, '.jpg'))))))));
+};
+var _user$project$Main$photoInDiv = function (ps) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$style(
+				{
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: 'height', _1: '100%'},
+					_1: {
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: 'width', _1: '100%'},
+						_1: {
+							ctor: '::',
+							_0: {
+								ctor: '_Tuple2',
+								_0: 'background',
+								_1: A2(
+									_elm_lang$core$Basics_ops['++'],
+									'url(\'',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										_user$project$Main$photoUrl(ps),
+										'\')'))
+							},
+							_1: {
+								ctor: '::',
+								_0: {ctor: '_Tuple2', _0: 'background-repeat', _1: 'no-repeat'},
+								_1: {
+									ctor: '::',
+									_0: {ctor: '_Tuple2', _0: 'background-position', _1: 'center center'},
+									_1: {
+										ctor: '::',
+										_0: {ctor: '_Tuple2', _0: 'background-color', _1: 'grey'},
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}
+					}
+				}),
+			_1: {ctor: '[]'}
+		},
+		{ctor: '[]'});
+};
 var _user$project$Main$view = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
@@ -9848,20 +9917,24 @@ var _user$project$Main$view = function (model) {
 				} else {
 					return A2(
 						_elm_lang$html$Html$div,
-						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$style(
+								{
+									ctor: '::',
+									_0: {ctor: '_Tuple2', _0: 'height', _1: '500px'},
+									_1: {
+										ctor: '::',
+										_0: {ctor: '_Tuple2', _0: 'width', _1: '800px'},
+										_1: {ctor: '[]'}
+									}
+								}),
+							_1: {ctor: '[]'}
+						},
 						A2(
 							_elm_lang$core$List$map,
-							function (ps) {
-								return A2(
-									_elm_lang$html$Html$div,
-									{ctor: '[]'},
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html$text(ps.id),
-										_1: {ctor: '[]'}
-									});
-							},
-							_p0._0.right));
+							_user$project$Main$photoInDiv,
+							A2(_elm_lang$core$List$take, 1, _p0._0.right)));
 				}
 			}(),
 			_1: {ctor: '[]'}
@@ -9901,9 +9974,9 @@ var _user$project$Main$Scroll = F2(
 var _user$project$Main$Model = function (a) {
 	return {photoIds: a};
 };
-var _user$project$Main$PhotoSpec = F2(
-	function (a, b) {
-		return {id: a, secret: b};
+var _user$project$Main$PhotoSpec = F4(
+	function (a, b, c, d) {
+		return {id: a, secret: b, server: c, farm: d};
 	});
 var _user$project$Main$decodePublicPhotos = A2(
 	_elm_lang$core$Json_Decode$at,
@@ -9917,8 +9990,8 @@ var _user$project$Main$decodePublicPhotos = A2(
 		}
 	},
 	_elm_lang$core$Json_Decode$list(
-		A3(
-			_elm_lang$core$Json_Decode$map2,
+		A5(
+			_elm_lang$core$Json_Decode$map4,
 			_user$project$Main$PhotoSpec,
 			A2(
 				_elm_lang$core$Json_Decode$at,
@@ -9935,7 +10008,23 @@ var _user$project$Main$decodePublicPhotos = A2(
 					_0: 'secret',
 					_1: {ctor: '[]'}
 				},
-				_elm_lang$core$Json_Decode$string))));
+				_elm_lang$core$Json_Decode$string),
+			A2(
+				_elm_lang$core$Json_Decode$at,
+				{
+					ctor: '::',
+					_0: 'server',
+					_1: {ctor: '[]'}
+				},
+				_elm_lang$core$Json_Decode$string),
+			A2(
+				_elm_lang$core$Json_Decode$at,
+				{
+					ctor: '::',
+					_0: 'farm',
+					_1: {ctor: '[]'}
+				},
+				_elm_lang$core$Json_Decode$int))));
 var _user$project$Main$NameOnly = function (a) {
 	return {ctor: 'NameOnly', _0: a};
 };
