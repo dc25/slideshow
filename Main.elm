@@ -30,6 +30,9 @@ decodeUserId =
 userIdUrl : String -> String
 userIdUrl n = "https://api.flickr.com/services/rest/?&method=flickr.people.findByUserName&api_key=859b1fdf671b6419805ec3d2c7578d70&username=" ++ n ++ "&format=json&nojsoncallback=1"
 
+publicPhotosUrl : String -> String
+publicPhotosUrl uid = "https://api.flickr.com/services/rest/?&method=flickr.people.getPublicPhotos&api_key=4ef2fe2affcdd6e13218f5ddd0e2500d&user_id=" ++ uid ++ "&format=json&nojsoncallback=1"
+
 initModel : Maybe Route -> (Model, Cmd Msg)
 initModel r = 
   let cmd = case r of 
