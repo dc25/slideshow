@@ -20,8 +20,7 @@ main =
 -- MODEL
 
 type alias Model =
-  { route : Maybe Route
-  , userId : Maybe String
+  { userId : Maybe String
   }
 
 decodeUserId : Decode.Decoder String
@@ -43,7 +42,7 @@ initModel r =
     Just (NameAndAlbum n a) -> 
       Http.send SetUserId (Http.get (userIdUrl n) decodeUserId )
 
-  in (Model r Nothing, cmd)
+  in (Model Nothing, cmd)
 
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
@@ -76,7 +75,7 @@ update msg model =
       initModel (Url.parseHash route location) 
 
     SetUserId (Ok userId) ->
-      (Model model.route (Just userId), Cmd.none)
+      (Model (Just userId), Cmd.none)
 
     SetUserId (Err _) ->
       (model, Cmd.none)
