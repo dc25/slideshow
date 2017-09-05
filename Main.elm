@@ -2,13 +2,13 @@ import Html exposing (Html, a, button, code, div, h1, li, text, ul)
 import Html.Attributes exposing (href, style)
 import Html.Events exposing (onClick)
 import Http
+import Svg exposing (Svg, svg, rect, polygon)
+import Svg.Attributes as SA exposing (preserveAspectRatio, points, x,y, height, width, viewBox, version)
 import List exposing (take)
 import Json.Decode as DC exposing (string, Decoder)
 import Task exposing (attempt, succeed, andThen)
 import Navigation
 import UrlParser as Url exposing ((</>), (<?>), s, int, string, stringParam, top)
-
-
 
 main =
   Navigation.program UrlChange
@@ -37,8 +37,8 @@ type alias PhotoSpec = { id: String
                        , farm: Int
                        }
 
-decodePublicPhotos : DC.Decoder (List PhotoSpec)
-decodePublicPhotos =
+decodePhotos : DC.Decoder (List PhotoSpec)
+decodePhotos =
     DC.at ["photos", "photo"] 
         (DC.list <| DC.map4 PhotoSpec 
                                 ((DC.at ["id"]) DC.string) 
@@ -63,7 +63,7 @@ initModel r =
       let req = Http.get (userIdUrl n) decodeUserId 
           userIdTask = Http.toTask req
           publicPhotosTask uid = 
-              Http.toTask (Http.get (publicPhotosUrl uid) decodePublicPhotos)
+              Http.toTask (Http.get (publicPhotosUrl uid) decodePhotos)
           userPhotosTask = userIdTask |> (andThen publicPhotosTask )
       in Task.attempt SetPhotoIds userPhotosTask
 
@@ -87,9 +87,12 @@ route =
 
 -- UPDATE
 
+type Direction = Left | Right
+
 type Msg
   =   UrlChange Navigation.Location
     | SetPhotoIds (Result Http.Error (List PhotoSpec))
+    | ScrollPick Direction
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -103,6 +106,15 @@ update msg model =
     SetPhotoIds (Err e) ->
       (Model (Err e), Cmd.none)
 
+    ScrollPick dir ->
+      case model.photoIds of
+        Ok s -> let ns = case dir of
+                           Right -> {left=List.take 1 s.right ++ s.left, right=List.drop 1 s.right}
+                           Left ->  {left=List.drop 1 s.left, right=List.take 1 s.left ++ s.right}
+                in (Model (Ok ns), Cmd.none)
+
+        Err e -> (model, Cmd.none)
+
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
@@ -110,6 +122,26 @@ subscriptions model =
   Sub.none
 
 -- VIEW
+
+
+arrow : Direction -> Svg Msg
+arrow dir = polygon [ points (if (dir == Left) 
+                             then "-80,-10 -80,10 -90,0" 
+                             else "80,-10 80,10 90,0")
+                    , style [("fill", "red")]
+                    , onClick (ScrollPick dir)
+                    ] 
+                    []
+
+
+svgArrows : Html Msg
+svgArrows = svg [ version "1.1"
+                , width "100%" 
+                , height "100%" 
+                , viewBox "-100 -100 200 200" 
+                , preserveAspectRatio "none"
+                ]
+                [arrow Left, arrow Right]
 
 photoUrl : PhotoSpec -> String
 photoUrl ps = "https://farm" ++ toString ps.farm ++ ".staticflickr.com/" ++ ps.server ++ "/" ++ ps.id ++ "_" ++ ps.secret ++ ".jpg"
@@ -120,9 +152,9 @@ photoInDiv ps = div [style [ ("height", "100%")
                            , ("background", "url('" ++ photoUrl ps ++ "')")
                            , ("background-repeat", "no-repeat")
                            , ("background-position", "center center")
-                           , ("background-color", "grey")]] []
-
--- https://stackoverflow.com/questions/1719452/how-to-make-a-div-always-full-screen
+                           , ("background-color", "grey")
+                           ]
+                    ] [svgArrows]
 
 view : Model -> Html Msg
 view model =
