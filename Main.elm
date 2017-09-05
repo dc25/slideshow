@@ -1,7 +1,8 @@
 import Html exposing (Html, a, button, code, div, h1, li, text, ul)
-import Html.Attributes exposing (href)
+import Html.Attributes exposing (href, style)
 import Html.Events exposing (onClick)
 import Http
+import List exposing (take)
 import Json.Decode as DC exposing (string, Decoder)
 import Task exposing (attempt, succeed, andThen)
 import Navigation
@@ -32,14 +33,19 @@ decodeUserId =
 
 type alias PhotoSpec = { id: String
                        , secret: String
+                       , server: String
+                       , farm: Int
                        }
 
 decodePublicPhotos : DC.Decoder (List PhotoSpec)
 decodePublicPhotos =
     DC.at ["photos", "photo"] 
-        (DC.list <| DC.map2 PhotoSpec 
+        (DC.list <| DC.map4 PhotoSpec 
                                 ((DC.at ["id"]) DC.string) 
-                                ((DC.at ["secret"]) DC.string))
+                                ((DC.at ["secret"]) DC.string)
+                                ((DC.at ["server"]) DC.string)
+                                ((DC.at ["farm"]) DC.int)     
+        )
 
 userIdUrl : String -> String
 userIdUrl n = "https://api.flickr.com/services/rest/?&method=flickr.people.findByUserName&api_key=859b1fdf671b6419805ec3d2c7578d70&username=" ++ n ++ "&format=json&nojsoncallback=1"
@@ -105,11 +111,24 @@ subscriptions model =
 
 -- VIEW
 
+photoUrl : PhotoSpec -> String
+photoUrl ps = "https://farm" ++ toString ps.farm ++ ".staticflickr.com/" ++ ps.server ++ "/" ++ ps.id ++ "_" ++ ps.secret ++ ".jpg"
+
+photoInDiv : PhotoSpec -> Html Msg
+photoInDiv ps = div [style [ ("height", "100%")
+                           , ("width", "100%")
+                           , ("background", "url('" ++ photoUrl ps ++ "')")
+                           , ("background-repeat", "no-repeat")
+                           , ("background-position", "center center")
+                           , ("background-color", "grey")]] []
+
+-- https://stackoverflow.com/questions/1719452/how-to-make-a-div-always-full-screen
+
 view : Model -> Html Msg
 view model =
   div []
     [ case model.photoIds of
         Err s -> text "Http Error"
-        Ok scroll -> div [] (List.map (\ps -> div [] [text ps.id]) scroll.right)
+        Ok scroll -> div [ style [("height","500px"), ("width", "800px")]  ] (List.map photoInDiv <| take 1 scroll.right)
 
     ]
