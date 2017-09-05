@@ -19,8 +19,11 @@ main =
 
 -- MODEL
 
+type alias Scroll 
+  = {left : List String, right : List String}
+
 type alias Model =
-  { photoIds : Maybe (List String)
+  { photoIds : Maybe Scroll
   }
 
 decodeUserId : Decode.Decoder String
@@ -82,7 +85,7 @@ update msg model =
       initModel (Url.parseHash route location) 
 
     SetPhotoIds (Ok photoIds) ->
-      (Model (Just photoIds), Cmd.none)
+      (Model (Just {left=[], right=photoIds}), Cmd.none)
 
     SetPhotoIds (Err _) ->
       (model, Cmd.none)
@@ -100,6 +103,6 @@ view model =
   div []
     [ case model.photoIds of
         Nothing -> text "No User ID"
-        Just pids -> div [] (List.map (\id -> div [] [text id]) pids)
+        Just scroll -> div [] (List.map (\id -> div [] [text id]) scroll.right)
 
     ]
