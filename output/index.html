@@ -10237,6 +10237,102 @@ var _user$project$Main$publicPhotosUrl = function (uid) {
 						'&user_id=',
 						A2(_elm_lang$core$Basics_ops['++'], uid, _user$project$Main$noJsonCallback))))));
 };
+var _user$project$Main$photoSetsUrl = function (uid) {
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		_user$project$Main$flickrRestServices,
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			'&method=flickr.photosets.getList',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'&api_key=',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_user$project$Main$apiKey,
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'&user_id=',
+						A2(_elm_lang$core$Basics_ops['++'], uid, _user$project$Main$noJsonCallback))))));
+};
+var _user$project$Main$albumPhotosUrl = F2(
+	function (album, _p0) {
+		var _p1 = _p0;
+		var setForAlbum = _elm_lang$core$List$head(
+			A2(
+				_elm_lang$core$List$filter,
+				function (_p2) {
+					var _p3 = _p2;
+					return _elm_lang$core$Native_Utils.eq(_p3._1, album);
+				},
+				_p1._1));
+		var _p4 = setForAlbum;
+		if (_p4.ctor === 'Nothing') {
+			return _elm_lang$core$Maybe$Nothing;
+		} else {
+			return _elm_lang$core$Maybe$Just(
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_user$project$Main$flickrRestServices,
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'&method=flickr.photosets.getPhotos',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'&api_key=',
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								_user$project$Main$apiKey,
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									'&user_id=',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										_p1._0,
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											'&photoset_id=',
+											A2(_elm_lang$core$Basics_ops['++'], _p4._0._0, _user$project$Main$noJsonCallback)))))))));
+		}
+	});
+var _user$project$Main$decodePhotoSets = A2(
+	_elm_lang$core$Json_Decode$at,
+	{
+		ctor: '::',
+		_0: 'photosets',
+		_1: {
+			ctor: '::',
+			_0: 'photoset',
+			_1: {ctor: '[]'}
+		}
+	},
+	_elm_lang$core$Json_Decode$list(
+		A3(
+			_elm_lang$core$Json_Decode$map2,
+			F2(
+				function (v0, v1) {
+					return {ctor: '_Tuple2', _0: v0, _1: v1};
+				}),
+			A2(
+				_elm_lang$core$Json_Decode$at,
+				{
+					ctor: '::',
+					_0: 'id',
+					_1: {ctor: '[]'}
+				},
+				_elm_lang$core$Json_Decode$string),
+			A2(
+				_elm_lang$core$Json_Decode$at,
+				{
+					ctor: '::',
+					_0: 'title',
+					_1: {
+						ctor: '::',
+						_0: '_content',
+						_1: {ctor: '[]'}
+					}
+				},
+				_elm_lang$core$Json_Decode$string))));
 var _user$project$Main$decodeUserId = A2(
 	_elm_lang$core$Json_Decode$at,
 	{
@@ -10307,6 +10403,57 @@ var _user$project$Main$decodePhotos = A2(
 					_1: {ctor: '[]'}
 				},
 				_elm_lang$core$Json_Decode$int))));
+var _user$project$Main$decodeAlbumPhotos = A2(
+	_elm_lang$core$Json_Decode$at,
+	{
+		ctor: '::',
+		_0: 'photoset',
+		_1: {
+			ctor: '::',
+			_0: 'photo',
+			_1: {ctor: '[]'}
+		}
+	},
+	_elm_lang$core$Json_Decode$list(
+		A5(
+			_elm_lang$core$Json_Decode$map4,
+			_user$project$Main$PhotoSpec,
+			A2(
+				_elm_lang$core$Json_Decode$at,
+				{
+					ctor: '::',
+					_0: 'id',
+					_1: {ctor: '[]'}
+				},
+				_elm_lang$core$Json_Decode$string),
+			A2(
+				_elm_lang$core$Json_Decode$at,
+				{
+					ctor: '::',
+					_0: 'secret',
+					_1: {ctor: '[]'}
+				},
+				_elm_lang$core$Json_Decode$string),
+			A2(
+				_elm_lang$core$Json_Decode$at,
+				{
+					ctor: '::',
+					_0: 'server',
+					_1: {ctor: '[]'}
+				},
+				_elm_lang$core$Json_Decode$string),
+			A2(
+				_elm_lang$core$Json_Decode$at,
+				{
+					ctor: '::',
+					_0: 'farm',
+					_1: {ctor: '[]'}
+				},
+				_elm_lang$core$Json_Decode$int))));
+var _user$project$Main$NameAndAlbum = F2(
+	function (a, b) {
+		return {ctor: 'NameAndAlbum', _0: a, _1: b};
+	});
 var _user$project$Main$NameOnly = function (a) {
 	return {ctor: 'NameOnly', _0: a};
 };
@@ -10314,7 +10461,14 @@ var _user$project$Main$route = _evancz$url_parser$UrlParser$oneOf(
 	{
 		ctor: '::',
 		_0: A2(_evancz$url_parser$UrlParser$map, _user$project$Main$NameOnly, _evancz$url_parser$UrlParser$string),
-		_1: {ctor: '[]'}
+		_1: {
+			ctor: '::',
+			_0: A2(
+				_evancz$url_parser$UrlParser$map,
+				_user$project$Main$NameAndAlbum,
+				A2(_evancz$url_parser$UrlParser_ops['</>'], _evancz$url_parser$UrlParser$string, _evancz$url_parser$UrlParser$string)),
+			_1: {ctor: '[]'}
+		}
 	});
 var _user$project$Main$Right = {ctor: 'Right'};
 var _user$project$Main$Left = {ctor: 'Left'};
@@ -10341,14 +10495,14 @@ var _user$project$Main$arrow = function (dir) {
 		},
 		{ctor: '[]'});
 };
-var _user$project$Main$svgArrows = function (_p0) {
-	var _p1 = _p0;
-	var ar = _p1._1 ? {
+var _user$project$Main$svgArrows = function (_p5) {
+	var _p6 = _p5;
+	var ar = _p6._1 ? {
 		ctor: '::',
 		_0: _user$project$Main$arrow(_user$project$Main$Right),
 		_1: {ctor: '[]'}
 	} : {ctor: '[]'};
-	var al = _p1._0 ? {
+	var al = _p6._0 ? {
 		ctor: '::',
 		_0: _user$project$Main$arrow(_user$project$Main$Left),
 		_1: {ctor: '[]'}
@@ -10423,16 +10577,20 @@ var _user$project$Main$view = function (model) {
 		{
 			ctor: '::',
 			_0: function () {
-				var _p2 = model.photoIds;
-				if (_p2.ctor === 'Err') {
-					return _elm_lang$html$Html$text('Http Error');
+				var _p7 = model.photoIds;
+				if (_p7.ctor === 'Err') {
+					return _elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'Error: ',
+							_elm_lang$core$Basics$toString(_p7._0)));
 				} else {
-					var _p3 = _p2._0;
+					var _p8 = _p7._0;
 					var rv = _elm_lang$core$Native_Utils.cmp(
-						_elm_lang$core$List$length(_p3.right),
+						_elm_lang$core$List$length(_p8.right),
 						1) > 0;
 					var lv = _elm_lang$core$Native_Utils.cmp(
-						_elm_lang$core$List$length(_p3.left),
+						_elm_lang$core$List$length(_p8.left),
 						0) > 0;
 					return A2(
 						_elm_lang$html$Html$div,
@@ -10454,7 +10612,7 @@ var _user$project$Main$view = function (model) {
 							_elm_lang$core$List$map,
 							_user$project$Main$photoInDiv(
 								{ctor: '_Tuple2', _0: lv, _1: rv}),
-							A2(_elm_lang$core$List$take, 1, _p3.right)));
+							A2(_elm_lang$core$List$take, 1, _p8.right)));
 				}
 			}(),
 			_1: {ctor: '[]'}
@@ -10465,24 +10623,62 @@ var _user$project$Main$SetPhotoIds = function (a) {
 };
 var _user$project$Main$initModel = function (r) {
 	var cmd = function () {
-		var _p4 = r;
-		if (_p4.ctor === 'Nothing') {
+		var _p9 = r;
+		if (_p9.ctor === 'Nothing') {
 			return _elm_lang$core$Platform_Cmd$none;
 		} else {
-			var publicPhotosTask = function (uid) {
-				return _elm_lang$http$Http$toTask(
-					A2(
-						_elm_lang$http$Http$get,
-						_user$project$Main$publicPhotosUrl(uid),
-						_user$project$Main$decodePhotos));
-			};
-			var req = A2(
-				_elm_lang$http$Http$get,
-				_user$project$Main$userIdUrl(_p4._0._0),
-				_user$project$Main$decodeUserId);
-			var userIdTask = _elm_lang$http$Http$toTask(req);
-			var userPhotosTask = A2(_elm_lang$core$Task$andThen, publicPhotosTask, userIdTask);
-			return A2(_elm_lang$core$Task$attempt, _user$project$Main$SetPhotoIds, userPhotosTask);
+			if (_p9._0.ctor === 'NameOnly') {
+				var publicPhotosTask = function (uid) {
+					return _elm_lang$http$Http$toTask(
+						A2(
+							_elm_lang$http$Http$get,
+							_user$project$Main$publicPhotosUrl(uid),
+							_user$project$Main$decodePhotos));
+				};
+				var req = A2(
+					_elm_lang$http$Http$get,
+					_user$project$Main$userIdUrl(_p9._0._0),
+					_user$project$Main$decodeUserId);
+				var userIdTask = _elm_lang$http$Http$toTask(req);
+				var userPhotosTask = A2(_elm_lang$core$Task$andThen, publicPhotosTask, userIdTask);
+				return A2(_elm_lang$core$Task$attempt, _user$project$Main$SetPhotoIds, userPhotosTask);
+			} else {
+				var _p11 = _p9._0._1;
+				var albumPhotosTask = function (sets) {
+					var murl = A2(_user$project$Main$albumPhotosUrl, _p11, sets);
+					var _p10 = murl;
+					if (_p10.ctor === 'Nothing') {
+						return _elm_lang$core$Task$fail(
+							_elm_lang$http$Http$BadUrl(
+								A2(_elm_lang$core$Basics_ops['++'], 'album not found: ', _p11)));
+					} else {
+						return _elm_lang$http$Http$toTask(
+							A2(_elm_lang$http$Http$get, _p10._0, _user$project$Main$decodeAlbumPhotos));
+					}
+				};
+				var setsTask = function (uid) {
+					return A2(
+						_elm_lang$core$Task$map,
+						function (s) {
+							return {ctor: '_Tuple2', _0: uid, _1: s};
+						},
+						_elm_lang$http$Http$toTask(
+							A2(
+								_elm_lang$http$Http$get,
+								_user$project$Main$photoSetsUrl(uid),
+								_user$project$Main$decodePhotoSets)));
+				};
+				var req = A2(
+					_elm_lang$http$Http$get,
+					_user$project$Main$userIdUrl(_p9._0._0),
+					_user$project$Main$decodeUserId);
+				var userIdTask = _elm_lang$http$Http$toTask(req);
+				var userPhotosTask = A2(
+					_elm_lang$core$Task$andThen,
+					albumPhotosTask,
+					A2(_elm_lang$core$Task$andThen, setsTask, userIdTask));
+				return A2(_elm_lang$core$Task$attempt, _user$project$Main$SetPhotoIds, userPhotosTask);
+			}
 		}
 	}();
 	return {
@@ -10502,20 +10698,20 @@ var _user$project$Main$init = function (location) {
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p5 = msg;
-		switch (_p5.ctor) {
+		var _p12 = msg;
+		switch (_p12.ctor) {
 			case 'UrlChange':
 				return _user$project$Main$initModel(
-					A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Main$route, _p5._0));
+					A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Main$route, _p12._0));
 			case 'SetPhotoIds':
-				if (_p5._0.ctor === 'Ok') {
+				if (_p12._0.ctor === 'Ok') {
 					return {
 						ctor: '_Tuple2',
 						_0: _user$project$Main$Model(
 							_elm_lang$core$Result$Ok(
 								{
 									left: {ctor: '[]'},
-									right: _p5._0._0
+									right: _p12._0._0
 								})),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -10523,31 +10719,31 @@ var _user$project$Main$update = F2(
 					return {
 						ctor: '_Tuple2',
 						_0: _user$project$Main$Model(
-							_elm_lang$core$Result$Err(_p5._0._0)),
+							_elm_lang$core$Result$Err(_p12._0._0)),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			default:
-				var _p6 = model.photoIds;
-				if (_p6.ctor === 'Ok') {
-					var _p8 = _p6._0;
+				var _p13 = model.photoIds;
+				if (_p13.ctor === 'Ok') {
+					var _p15 = _p13._0;
 					var ns = function () {
-						var _p7 = _p5._0;
-						if (_p7.ctor === 'Right') {
+						var _p14 = _p12._0;
+						if (_p14.ctor === 'Right') {
 							return {
 								left: A2(
 									_elm_lang$core$Basics_ops['++'],
-									A2(_elm_lang$core$List$take, 1, _p8.right),
-									_p8.left),
-								right: A2(_elm_lang$core$List$drop, 1, _p8.right)
+									A2(_elm_lang$core$List$take, 1, _p15.right),
+									_p15.left),
+								right: A2(_elm_lang$core$List$drop, 1, _p15.right)
 							};
 						} else {
 							return {
-								left: A2(_elm_lang$core$List$drop, 1, _p8.left),
+								left: A2(_elm_lang$core$List$drop, 1, _p15.left),
 								right: A2(
 									_elm_lang$core$Basics_ops['++'],
-									A2(_elm_lang$core$List$take, 1, _p8.left),
-									_p8.right)
+									A2(_elm_lang$core$List$take, 1, _p15.left),
+									_p15.right)
 							};
 						}
 					}();

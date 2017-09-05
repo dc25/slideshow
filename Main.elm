@@ -8,7 +8,7 @@ import List exposing (take)
 import Json.Decode as DC exposing (Decoder)
 import Task exposing (andThen)
 import Navigation
-import UrlParser as Url 
+import UrlParser as Url exposing ((</>))
 
 main =
   Navigation.program UrlChange
@@ -29,7 +29,7 @@ type alias Model =
 
 decodeUserId : DC.Decoder String
 decodeUserId =
-    DC.at ["user", "id"] DC.string
+  DC.at ["user", "id"] DC.string
 
 type alias PhotoSpec = { id: String
                        , secret: String
@@ -39,13 +39,31 @@ type alias PhotoSpec = { id: String
 
 decodePhotos : DC.Decoder (List PhotoSpec)
 decodePhotos =
-    DC.at ["photos", "photo"] 
-        (DC.list <| DC.map4 PhotoSpec 
-                                ((DC.at ["id"]) DC.string) 
-                                ((DC.at ["secret"]) DC.string)
-                                ((DC.at ["server"]) DC.string)
-                                ((DC.at ["farm"]) DC.int)     
-        )
+  DC.at ["photos", "photo"] 
+    (DC.list <| DC.map4 PhotoSpec
+                          ((DC.at ["id"]) DC.string) 
+                          ((DC.at ["secret"]) DC.string)
+                          ((DC.at ["server"]) DC.string)
+                          ((DC.at ["farm"]) DC.int)     
+    )
+
+decodeAlbumPhotos : DC.Decoder (List PhotoSpec)
+decodeAlbumPhotos =
+  DC.at ["photoset", "photo"] 
+    (DC.list <| DC.map4 PhotoSpec
+                          ((DC.at ["id"]) DC.string) 
+                          ((DC.at ["secret"]) DC.string)
+                          ((DC.at ["server"]) DC.string)
+                          ((DC.at ["farm"]) DC.int)     
+    )
+
+decodePhotoSets : DC.Decoder (List (String, String))
+decodePhotoSets =
+  DC.at ["photosets", "photoset"] 
+    (DC.list <| DC.map2 (,)
+                  ((DC.at ["id"]) DC.string) 
+                  ((DC.at ["title", "_content"]) DC.string)
+    )
 
 apiKey : String
 apiKey = "859b1fdf671b6419805ec3d2c7578d70"
@@ -72,18 +90,58 @@ publicPhotosUrl uid =
   ++ "&user_id=" ++ uid 
   ++ noJsonCallback
 
+photoSetsUrl : String -> String
+photoSetsUrl uid = 
+     flickrRestServices
+  ++ "&method=flickr.photosets.getList"
+  ++ "&api_key=" ++ apiKey 
+  ++ "&user_id=" ++ uid 
+  ++ noJsonCallback
+
+albumPhotosUrl : String -> (String, List (String, String)) -> Maybe String
+albumPhotosUrl album (uid, setList) =  
+  let setForAlbum = List.head <| List.filter (\(id, name) -> name == album) setList
+  in case setForAlbum of
+      Nothing -> Nothing
+      Just (id,name) -> Just(   flickrRestServices
+                             ++ "&method=flickr.photosets.getPhotos"
+                             ++ "&api_key=" ++ apiKey 
+                             ++ "&user_id=" ++ uid 
+                             ++ "&photoset_id=" ++ id
+                             ++ noJsonCallback )
+
 initModel : Maybe Route -> (Model, Cmd Msg)
 initModel r = 
   let cmd = case r of 
     Nothing -> 
       Cmd.none
 
-    Just (NameOnly n) -> 
-      let req = Http.get (userIdUrl n) decodeUserId 
+    Just (NameOnly name) -> 
+      let req = Http.get (userIdUrl name) decodeUserId 
+
           userIdTask = Http.toTask req
+
           publicPhotosTask uid = 
               Http.toTask (Http.get (publicPhotosUrl uid) decodePhotos)
+
           userPhotosTask = userIdTask |> (andThen publicPhotosTask )
+
+      in Task.attempt SetPhotoIds userPhotosTask
+
+    Just (NameAndAlbum name album) -> 
+      let req = Http.get (userIdUrl name) decodeUserId 
+          userIdTask = Http.toTask req
+
+          setsTask uid = 
+              Task.map (\s -> (uid,s)) <| Http.toTask (Http.get (photoSetsUrl uid) decodePhotoSets)
+
+          albumPhotosTask sets = 
+              let murl = albumPhotosUrl album sets
+              in case murl of
+                  Nothing -> Task.fail (Http.BadUrl <| "album not found: " ++ album)
+                  Just url -> Http.toTask (Http.get url decodeAlbumPhotos)
+
+          userPhotosTask = userIdTask |> (andThen setsTask ) |> (andThen albumPhotosTask)
       in Task.attempt SetPhotoIds userPhotosTask
 
   in (Model (Ok {left=[], right=[]}), cmd)
@@ -96,12 +154,13 @@ init location =
 
 type Route
   = NameOnly String
-
+  | NameAndAlbum String String
 
 route : Url.Parser (Route -> a) a
 route =
   Url.oneOf
     [ Url.map NameOnly Url.string
+    , Url.map NameAndAlbum (Url.string </> Url.string)
     ]
 
 -- UPDATE
@@ -128,8 +187,10 @@ update msg model =
     ScrollPick dir ->
       case model.photoIds of
         Ok s -> let ns = case dir of
-                           Right -> {left=List.take 1 s.right ++ s.left, right=List.drop 1 s.right}
-                           Left ->  {left=List.drop 1 s.left, right=List.take 1 s.left ++ s.right}
+                           Right -> 
+                             {left=List.take 1 s.right ++ s.left, right=List.drop 1 s.right}
+                           Left ->  
+                             {left=List.drop 1 s.left, right=List.take 1 s.left ++ s.right}
                 in (Model (Ok ns), Cmd.none)
 
         Err e -> (model, Cmd.none)
@@ -157,6 +218,7 @@ svgArrows (vl,vr) =
            ]
            (al ++ ar)
 
+-- https://www.flickr.com/services/api/misc.urls.html
 photoUrl : PhotoSpec -> String
 photoUrl ps = 
      "https://farm" ++ toString ps.farm ++ ".staticflickr.com/" 
@@ -176,7 +238,7 @@ view model =
   div []
       [ case model.photoIds of
           Err s -> 
-              text "Http Error"
+              text ("Error: " ++ (toString s))
 
           Ok scroll -> 
               let lv = List.length (scroll.left) > 0
