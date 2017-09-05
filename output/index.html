@@ -10198,17 +10198,44 @@ var _user$project$Main$photoUrl = function (ps) {
 								'_',
 								A2(_elm_lang$core$Basics_ops['++'], ps.secret, '_b.jpg'))))))));
 };
+var _user$project$Main$noJsonCallback = '&format=json&nojsoncallback=1';
+var _user$project$Main$flickrRestServices = 'https://api.flickr.com/services/rest/?';
+var _user$project$Main$apiKey = '859b1fdf671b6419805ec3d2c7578d70';
+var _user$project$Main$userIdUrl = function (name) {
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		_user$project$Main$flickrRestServices,
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			'&method=flickr.people.findByUserName',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'&api_key=',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_user$project$Main$apiKey,
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'&username=',
+						A2(_elm_lang$core$Basics_ops['++'], name, _user$project$Main$noJsonCallback))))));
+};
 var _user$project$Main$publicPhotosUrl = function (uid) {
 	return A2(
 		_elm_lang$core$Basics_ops['++'],
-		'https://api.flickr.com/services/rest/?&method=flickr.people.getPublicPhotos&api_key=4ef2fe2affcdd6e13218f5ddd0e2500d&user_id=',
-		A2(_elm_lang$core$Basics_ops['++'], uid, '&format=json&nojsoncallback=1'));
-};
-var _user$project$Main$userIdUrl = function (n) {
-	return A2(
-		_elm_lang$core$Basics_ops['++'],
-		'https://api.flickr.com/services/rest/?&method=flickr.people.findByUserName&api_key=859b1fdf671b6419805ec3d2c7578d70&username=',
-		A2(_elm_lang$core$Basics_ops['++'], n, '&format=json&nojsoncallback=1'));
+		_user$project$Main$flickrRestServices,
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			'&method=flickr.people.getPublicPhotos',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'&api_key=',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_user$project$Main$apiKey,
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'&user_id=',
+						A2(_elm_lang$core$Basics_ops['++'], uid, _user$project$Main$noJsonCallback))))));
 };
 var _user$project$Main$decodeUserId = A2(
 	_elm_lang$core$Json_Decode$at,

@@ -47,11 +47,30 @@ decodePhotos =
                                 ((DC.at ["farm"]) DC.int)     
         )
 
+apiKey : String
+apiKey = "859b1fdf671b6419805ec3d2c7578d70"
+
+flickrRestServices : String
+flickrRestServices = "https://api.flickr.com/services/rest/?" 
+
+noJsonCallback : String
+noJsonCallback = "&format=json&nojsoncallback=1" 
+
 userIdUrl : String -> String
-userIdUrl n = "https://api.flickr.com/services/rest/?&method=flickr.people.findByUserName&api_key=859b1fdf671b6419805ec3d2c7578d70&username=" ++ n ++ "&format=json&nojsoncallback=1"
+userIdUrl name = 
+     flickrRestServices
+  ++ "&method=flickr.people.findByUserName"
+  ++ "&api_key=" ++ apiKey 
+  ++ "&username=" ++ name 
+  ++ noJsonCallback
 
 publicPhotosUrl : String -> String
-publicPhotosUrl uid = "https://api.flickr.com/services/rest/?&method=flickr.people.getPublicPhotos&api_key=4ef2fe2affcdd6e13218f5ddd0e2500d&user_id=" ++ uid ++ "&format=json&nojsoncallback=1"
+publicPhotosUrl uid = 
+     flickrRestServices
+  ++ "&method=flickr.people.getPublicPhotos"
+  ++ "&api_key=" ++ apiKey 
+  ++ "&user_id=" ++ uid 
+  ++ noJsonCallback
 
 initModel : Maybe Route -> (Model, Cmd Msg)
 initModel r = 
