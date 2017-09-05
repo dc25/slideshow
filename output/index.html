@@ -10314,75 +10314,81 @@ var _user$project$Main$arrow = function (dir) {
 		},
 		{ctor: '[]'});
 };
-var _user$project$Main$svgArrows = A2(
-	_elm_lang$svg$Svg$svg,
-	{
+var _user$project$Main$svgArrows = function (_p0) {
+	var _p1 = _p0;
+	var ar = _p1._1 ? {
 		ctor: '::',
-		_0: _elm_lang$svg$Svg_Attributes$version('1.1'),
-		_1: {
-			ctor: '::',
-			_0: _elm_lang$svg$Svg_Attributes$width('100%'),
-			_1: {
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$height('100%'),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$viewBox('-100 -100 200 200'),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$preserveAspectRatio('none'),
-						_1: {ctor: '[]'}
-					}
-				}
-			}
-		}
-	},
-	{
+		_0: _user$project$Main$arrow(_user$project$Main$Right),
+		_1: {ctor: '[]'}
+	} : {ctor: '[]'};
+	var al = _p1._0 ? {
 		ctor: '::',
 		_0: _user$project$Main$arrow(_user$project$Main$Left),
-		_1: {
-			ctor: '::',
-			_0: _user$project$Main$arrow(_user$project$Main$Right),
-			_1: {ctor: '[]'}
-		}
-	});
-var _user$project$Main$photoInDiv = function (ps) {
+		_1: {ctor: '[]'}
+	} : {ctor: '[]'};
 	return A2(
-		_elm_lang$html$Html$div,
+		_elm_lang$svg$Svg$svg,
 		{
 			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$style(
-				{
+			_0: _elm_lang$svg$Svg_Attributes$version('1.1'),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$width('100%'),
+				_1: {
 					ctor: '::',
-					_0: {ctor: '_Tuple2', _0: 'height', _1: '100%'},
+					_0: _elm_lang$svg$Svg_Attributes$height('100%'),
 					_1: {
 						ctor: '::',
-						_0: {ctor: '_Tuple2', _0: 'width', _1: '100%'},
+						_0: _elm_lang$svg$Svg_Attributes$viewBox('-100 -100 200 200'),
 						_1: {
 							ctor: '::',
-							_0: {
-								ctor: '_Tuple2',
-								_0: 'background',
-								_1: A2(
-									_elm_lang$core$Basics_ops['++'],
-									'url(\'',
-									A2(
-										_elm_lang$core$Basics_ops['++'],
-										_user$project$Main$photoUrl(ps),
-										'\') center center no-repeat grey'))
-							},
+							_0: _elm_lang$svg$Svg_Attributes$preserveAspectRatio('none'),
 							_1: {ctor: '[]'}
 						}
 					}
-				}),
-			_1: {ctor: '[]'}
+				}
+			}
 		},
-		{
-			ctor: '::',
-			_0: _user$project$Main$svgArrows,
-			_1: {ctor: '[]'}
-		});
+		A2(_elm_lang$core$Basics_ops['++'], al, ar));
 };
+var _user$project$Main$photoInDiv = F2(
+	function (vis, ps) {
+		return A2(
+			_elm_lang$html$Html$div,
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$style(
+					{
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: 'height', _1: '100%'},
+						_1: {
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: 'width', _1: '100%'},
+							_1: {
+								ctor: '::',
+								_0: {
+									ctor: '_Tuple2',
+									_0: 'background',
+									_1: A2(
+										_elm_lang$core$Basics_ops['++'],
+										'url(\'',
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											_user$project$Main$photoUrl(ps),
+											'\') center center no-repeat grey'))
+								},
+								_1: {ctor: '[]'}
+							}
+						}
+					}),
+				_1: {ctor: '[]'}
+			},
+			{
+				ctor: '::',
+				_0: _user$project$Main$svgArrows(vis),
+				_1: {ctor: '[]'}
+			});
+	});
 var _user$project$Main$view = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
@@ -10390,10 +10396,17 @@ var _user$project$Main$view = function (model) {
 		{
 			ctor: '::',
 			_0: function () {
-				var _p0 = model.photoIds;
-				if (_p0.ctor === 'Err') {
+				var _p2 = model.photoIds;
+				if (_p2.ctor === 'Err') {
 					return _elm_lang$html$Html$text('Http Error');
 				} else {
+					var _p3 = _p2._0;
+					var rv = _elm_lang$core$Native_Utils.cmp(
+						_elm_lang$core$List$length(_p3.right),
+						1) > 0;
+					var lv = _elm_lang$core$Native_Utils.cmp(
+						_elm_lang$core$List$length(_p3.left),
+						0) > 0;
 					return A2(
 						_elm_lang$html$Html$div,
 						{
@@ -10412,8 +10425,9 @@ var _user$project$Main$view = function (model) {
 						},
 						A2(
 							_elm_lang$core$List$map,
-							_user$project$Main$photoInDiv,
-							A2(_elm_lang$core$List$take, 1, _p0._0.right)));
+							_user$project$Main$photoInDiv(
+								{ctor: '_Tuple2', _0: lv, _1: rv}),
+							A2(_elm_lang$core$List$take, 1, _p3.right)));
 				}
 			}(),
 			_1: {ctor: '[]'}
@@ -10424,8 +10438,8 @@ var _user$project$Main$SetPhotoIds = function (a) {
 };
 var _user$project$Main$initModel = function (r) {
 	var cmd = function () {
-		var _p1 = r;
-		if (_p1.ctor === 'Nothing') {
+		var _p4 = r;
+		if (_p4.ctor === 'Nothing') {
 			return _elm_lang$core$Platform_Cmd$none;
 		} else {
 			var publicPhotosTask = function (uid) {
@@ -10437,7 +10451,7 @@ var _user$project$Main$initModel = function (r) {
 			};
 			var req = A2(
 				_elm_lang$http$Http$get,
-				_user$project$Main$userIdUrl(_p1._0._0),
+				_user$project$Main$userIdUrl(_p4._0._0),
 				_user$project$Main$decodeUserId);
 			var userIdTask = _elm_lang$http$Http$toTask(req);
 			var userPhotosTask = A2(_elm_lang$core$Task$andThen, publicPhotosTask, userIdTask);
@@ -10461,20 +10475,20 @@ var _user$project$Main$init = function (location) {
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p2 = msg;
-		switch (_p2.ctor) {
+		var _p5 = msg;
+		switch (_p5.ctor) {
 			case 'UrlChange':
 				return _user$project$Main$initModel(
-					A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Main$route, _p2._0));
+					A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Main$route, _p5._0));
 			case 'SetPhotoIds':
-				if (_p2._0.ctor === 'Ok') {
+				if (_p5._0.ctor === 'Ok') {
 					return {
 						ctor: '_Tuple2',
 						_0: _user$project$Main$Model(
 							_elm_lang$core$Result$Ok(
 								{
 									left: {ctor: '[]'},
-									right: _p2._0._0
+									right: _p5._0._0
 								})),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -10482,31 +10496,31 @@ var _user$project$Main$update = F2(
 					return {
 						ctor: '_Tuple2',
 						_0: _user$project$Main$Model(
-							_elm_lang$core$Result$Err(_p2._0._0)),
+							_elm_lang$core$Result$Err(_p5._0._0)),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			default:
-				var _p3 = model.photoIds;
-				if (_p3.ctor === 'Ok') {
-					var _p5 = _p3._0;
+				var _p6 = model.photoIds;
+				if (_p6.ctor === 'Ok') {
+					var _p8 = _p6._0;
 					var ns = function () {
-						var _p4 = _p2._0;
-						if (_p4.ctor === 'Right') {
+						var _p7 = _p5._0;
+						if (_p7.ctor === 'Right') {
 							return {
 								left: A2(
 									_elm_lang$core$Basics_ops['++'],
-									A2(_elm_lang$core$List$take, 1, _p5.right),
-									_p5.left),
-								right: A2(_elm_lang$core$List$drop, 1, _p5.right)
+									A2(_elm_lang$core$List$take, 1, _p8.right),
+									_p8.left),
+								right: A2(_elm_lang$core$List$drop, 1, _p8.right)
 							};
 						} else {
 							return {
-								left: A2(_elm_lang$core$List$drop, 1, _p5.left),
+								left: A2(_elm_lang$core$List$drop, 1, _p8.left),
 								right: A2(
 									_elm_lang$core$Basics_ops['++'],
-									A2(_elm_lang$core$List$take, 1, _p5.left),
-									_p5.right)
+									A2(_elm_lang$core$List$take, 1, _p8.left),
+									_p8.right)
 							};
 						}
 					}();

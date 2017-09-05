@@ -126,15 +126,17 @@ arrow dir = polygon [ SA.points (if (dir == Left)
                     ] 
                     []
 
-
-svgArrows : Html Msg
-svgArrows = svg [ SA.version "1.1"
-                , SA.width "100%" 
-                , SA.height "100%" 
-                , SA.viewBox "-100 -100 200 200" 
-                , SA.preserveAspectRatio "none"
-                ]
-                [arrow Left, arrow Right]
+svgArrows : (Bool, Bool) -> Html Msg
+svgArrows (vl,vr) = 
+    let al = if (vl) then [arrow Left] else []
+        ar = if (vr) then [arrow Right] else []
+    in svg [ SA.version "1.1"
+           , SA.width "100%" 
+           , SA.height "100%" 
+           , SA.viewBox "-100 -100 200 200" 
+           , SA.preserveAspectRatio "none"
+           ]
+           (al ++ ar)
 
 photoUrl : PhotoSpec -> String
 photoUrl ps = 
@@ -142,13 +144,13 @@ photoUrl ps =
   ++ ps.server ++ "/" 
   ++ ps.id ++ "_" ++ ps.secret ++ "_b.jpg"
 
-photoInDiv : PhotoSpec -> Html Msg
-photoInDiv ps = div [HA.style [ ("height", "100%")
-                              , ("width", "100%")
-                              , ("background", "url('" ++ photoUrl ps ++ "') center center no-repeat grey")
-                              ]
-                    ] 
-                    [svgArrows]
+photoInDiv : (Bool, Bool) -> PhotoSpec -> Html Msg
+photoInDiv vis ps = div [HA.style [ ("height", "100%")
+                                  , ("width", "100%")
+                                  , ("background", "url('" ++ photoUrl ps ++ "') center center no-repeat grey")
+                                  ]
+                        ] 
+                        [svgArrows vis]
 
 view : Model -> Html Msg
 view model =
@@ -158,7 +160,8 @@ view model =
               text "Http Error"
 
           Ok scroll -> 
-              div [HA.style [("height","500px"), ("width", "800px")] ] 
-                  (List.map photoInDiv <| take 1 scroll.right)
-
-    ]
+              let lv = List.length (scroll.left) > 0
+                  rv = List.length (scroll.right) > 1
+              in div [HA.style [("height","500px"), ("width", "800px")] ] 
+                     (List.map (photoInDiv (lv,rv)) <| take 1 scroll.right)
+      ]
