@@ -2,7 +2,7 @@ import Html exposing (Html, a, button, code, div, h1, li, text, ul)
 import Html.Attributes exposing (href)
 import Html.Events exposing (onClick)
 import Http
-import Json.Decode as Decode exposing (string, Decoder)
+import Json.Decode as DC exposing (string, Decoder)
 import Task exposing (attempt, succeed, andThen)
 import Navigation
 import UrlParser as Url exposing ((</>), (<?>), s, int, string, stringParam, top)
@@ -20,19 +20,26 @@ main =
 -- MODEL
 
 type alias Scroll 
-  = {left : List String, right : List String}
+  = {left : List PhotoSpec, right : List PhotoSpec}
 
 type alias Model =
-  { photoIds : Maybe Scroll
+  { photoIds : Result Http.Error Scroll
   }
 
-decodeUserId : Decode.Decoder String
+decodeUserId : DC.Decoder String
 decodeUserId =
-    Decode.at ["user", "id"] Decode.string
+    DC.at ["user", "id"] DC.string
 
-decodePublicPhotos : Decode.Decoder (List String)
+type alias PhotoSpec = { id: String
+                       , secret: String
+                       }
+
+decodePublicPhotos : DC.Decoder (List PhotoSpec)
 decodePublicPhotos =
-    Decode.at ["photos", "photo"] (Decode.list <| (Decode.at ["id"]) Decode.string)
+    DC.at ["photos", "photo"] 
+        (DC.list <| DC.map2 PhotoSpec 
+                                ((DC.at ["id"]) DC.string) 
+                                ((DC.at ["secret"]) DC.string))
 
 userIdUrl : String -> String
 userIdUrl n = "https://api.flickr.com/services/rest/?&method=flickr.people.findByUserName&api_key=859b1fdf671b6419805ec3d2c7578d70&username=" ++ n ++ "&format=json&nojsoncallback=1"
@@ -54,7 +61,7 @@ initModel r =
           userPhotosTask = userIdTask |> (andThen publicPhotosTask )
       in Task.attempt SetPhotoIds userPhotosTask
 
-  in (Model Nothing, cmd)
+  in (Model (Ok {left=[], right=[]}), cmd)
 
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
@@ -76,7 +83,7 @@ route =
 
 type Msg
   =   UrlChange Navigation.Location
-    | SetPhotoIds (Result Http.Error (List String))
+    | SetPhotoIds (Result Http.Error (List PhotoSpec))
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -85,10 +92,10 @@ update msg model =
       initModel (Url.parseHash route location) 
 
     SetPhotoIds (Ok photoIds) ->
-      (Model (Just {left=[], right=photoIds}), Cmd.none)
+      (Model (Ok {left=[], right=photoIds}), Cmd.none)
 
-    SetPhotoIds (Err _) ->
-      (model, Cmd.none)
+    SetPhotoIds (Err e) ->
+      (Model (Err e), Cmd.none)
 
 -- SUBSCRIPTIONS
 
@@ -102,7 +109,7 @@ view : Model -> Html Msg
 view model =
   div []
     [ case model.photoIds of
-        Nothing -> text "No User ID"
-        Just scroll -> div [] (List.map (\id -> div [] [text id]) scroll.right)
+        Err s -> text "Http Error"
+        Ok scroll -> div [] (List.map (\ps -> div [] [text ps.id]) scroll.right)
 
     ]
