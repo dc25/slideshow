@@ -2,6 +2,7 @@ import Html exposing (Html, a, button, code, div, h1, li, text, ul)
 import Html.Attributes exposing (href)
 import Html.Events exposing (onClick)
 import Http
+import Json.Decode as Decode exposing (string, Decoder)
 import Task exposing (attempt, succeed)
 import Navigation
 import UrlParser as Url exposing ((</>), (<?>), s, int, string, stringParam, top)
@@ -16,22 +17,37 @@ main =
     , subscriptions = subscriptions
     }
 
-
 -- MODEL
-
 
 type alias Model =
   { route : Maybe Route
+  , userId : Maybe String
   }
 
-initModel : Maybe Route -> Model
-initModel r = Model r
+decodeUserId : Decode.Decoder String
+decodeUserId =
+    Decode.at ["user", "id"] Decode.string
+
+userIdUrl : String -> String
+userIdUrl n = "https://api.flickr.com/services/rest/?&method=flickr.people.findByUserName&api_key=859b1fdf671b6419805ec3d2c7578d70&username=" ++ n ++ "&format=json&nojsoncallback=1"
+
+initModel : Maybe Route -> (Model, Cmd Msg)
+initModel r = 
+  let cmd = case r of 
+    Nothing -> 
+      Cmd.none
+
+    Just (NameOnly n) -> 
+      Http.send SetUserId (Http.get (userIdUrl n) decodeUserId )
+
+    Just (NameAndAlbum n a) -> 
+      Http.send SetUserId (Http.get (userIdUrl n) decodeUserId )
+
+  in (Model r Nothing, cmd)
 
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
-    ( initModel (Url.parseHash route location)
-    , Cmd.none
-    )
+    initModel (Url.parseHash route location)
 
 -- URL PARSING
 
@@ -43,23 +59,27 @@ type Route
 route : Url.Parser (Route -> a) a
 route =
   Url.oneOf
-    [ Url.map NameOnly string
-    , Url.map NameAndAlbum (string </> string)
+    [ Url.map NameOnly Url.string
+    , Url.map NameAndAlbum (Url.string </> Url.string)
     ]
 
 -- UPDATE
 
-
 type Msg
-  = UrlChange Navigation.Location
+  =   UrlChange Navigation.Location
+    | SetUserId (Result Http.Error String)
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
     UrlChange location ->
-      ( initModel (Url.parseHash route location) 
-      , Cmd.none
-      )
+      initModel (Url.parseHash route location) 
+
+    SetUserId (Ok userId) ->
+      (Model model.route (Just userId), Cmd.none)
+
+    SetUserId (Err _) ->
+      (model, Cmd.none)
 
 
 -- SUBSCRIPTIONS
@@ -73,12 +93,8 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
   div []
-    [ h1 [] [ text "Links" ]
-    , h1 [] [ text "History" ]
-    , case model.route of
-        Nothing -> text "No User Specified"
-        Just r -> 
-            case r of
-                NameOnly n -> text n
-                NameAndAlbum n a -> text (n ++ a)
+    [ case model.userId of
+        Nothing -> text "No User Found"
+        Just uid -> text uid
+
     ]
