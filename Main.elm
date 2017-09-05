@@ -48,7 +48,8 @@ initModel r =
           userIdTask = Http.toTask req
           publicPhotosTask uid = 
               Http.toTask (Http.get (publicPhotosUrl uid) decodePublicPhotos)
-      in Task.attempt SetPhotoIds (userIdTask |> (andThen publicPhotosTask ))
+          userPhotosTask = userIdTask |> (andThen publicPhotosTask )
+      in Task.attempt SetPhotoIds userPhotosTask
 
   in (Model Nothing, cmd)
 
@@ -85,7 +86,6 @@ update msg model =
 
     SetPhotoIds (Err _) ->
       (model, Cmd.none)
-
 
 -- SUBSCRIPTIONS
 
