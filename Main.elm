@@ -1,21 +1,21 @@
-import Html exposing (Html, a, button, code, div, h1, li, text, ul)
-import Html.Attributes as HA exposing (href, style)
-import Html.Events exposing (onClick)
+import Html exposing (Html, div, text)
+import Html.Attributes as HA 
+import Html.Events as HE 
 import Http
-import Svg exposing (Svg, svg, rect, polygon)
-import Svg.Attributes as SA exposing (preserveAspectRatio, points, x,y, height, width, viewBox, version)
+import Svg exposing (Svg, svg, polygon)
+import Svg.Attributes as SA 
 import List exposing (take)
-import Json.Decode as DC exposing (string, Decoder)
-import Task exposing (attempt, succeed, andThen)
+import Json.Decode as DC exposing (Decoder)
+import Task exposing (andThen)
 import Navigation
-import UrlParser as Url exposing ((</>), (<?>), s, int, string, stringParam, top)
+import UrlParser as Url 
 
 main =
   Navigation.program UrlChange
     { init = init
     , view = view
     , update = update
-    , subscriptions = subscriptions
+    , subscriptions = \m -> Sub.none
     }
 
 -- MODEL
@@ -115,48 +115,50 @@ update msg model =
 
         Err e -> (model, Cmd.none)
 
--- SUBSCRIPTIONS
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-  Sub.none
-
 -- VIEW
 
 arrow : Direction -> Svg Msg
-arrow dir = polygon [ points (if (dir == Left) 
-                             then "-80,-10 -80,10 -90,0" 
-                             else "80,-10 80,10 90,0")
-                    , style [("fill", "red")]
-                    , onClick (ScrollPick dir)
+arrow dir = polygon [ SA.points (if (dir == Left) 
+                                 then "-80,-10 -80,10 -90,0" 
+                                 else "80,-10 80,10 90,0")
+                    , SA.style "fill: red"
+                    , HE.onClick (ScrollPick dir)
                     ] 
                     []
 
 
 svgArrows : Html Msg
-svgArrows = svg [ version "1.1"
-                , width "100%" 
-                , height "100%" 
-                , viewBox "-100 -100 200 200" 
-                , preserveAspectRatio "none"
+svgArrows = svg [ SA.version "1.1"
+                , SA.width "100%" 
+                , SA.height "100%" 
+                , SA.viewBox "-100 -100 200 200" 
+                , SA.preserveAspectRatio "none"
                 ]
                 [arrow Left, arrow Right]
 
 photoUrl : PhotoSpec -> String
-photoUrl ps = "https://farm" ++ toString ps.farm ++ ".staticflickr.com/" ++ ps.server ++ "/" ++ ps.id ++ "_" ++ ps.secret ++ "_b.jpg"
+photoUrl ps = 
+     "https://farm" ++ toString ps.farm ++ ".staticflickr.com/" 
+  ++ ps.server ++ "/" 
+  ++ ps.id ++ "_" ++ ps.secret ++ "_b.jpg"
 
 photoInDiv : PhotoSpec -> Html Msg
-photoInDiv ps = div [style [ ("height", "100%")
-                           , ("width", "100%")
-                           , ("background", "url('" ++ photoUrl ps ++ "') center center no-repeat grey")
-                           ]
-                    ] [svgArrows]
+photoInDiv ps = div [HA.style [ ("height", "100%")
+                              , ("width", "100%")
+                              , ("background", "url('" ++ photoUrl ps ++ "') center center no-repeat grey")
+                              ]
+                    ] 
+                    [svgArrows]
 
 view : Model -> Html Msg
 view model =
   div []
-    [ case model.photoIds of
-        Err s -> text "Http Error"
-        Ok scroll -> div [ style [("height","500px"), ("width", "800px")]  ] (List.map photoInDiv <| take 1 scroll.right)
+      [ case model.photoIds of
+          Err s -> 
+              text "Http Error"
+
+          Ok scroll -> 
+              div [HA.style [("height","500px"), ("width", "800px")] ] 
+                  (List.map photoInDiv <| take 1 scroll.right)
 
     ]
