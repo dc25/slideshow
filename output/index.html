@@ -10196,7 +10196,7 @@ var _user$project$Main$photoUrl = function (ps) {
 							A2(
 								_elm_lang$core$Basics_ops['++'],
 								'_',
-								A2(_elm_lang$core$Basics_ops['++'], ps.secret, '.jpg'))))))));
+								A2(_elm_lang$core$Basics_ops['++'], ps.secret, '_b.jpg'))))))));
 };
 var _user$project$Main$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$none;
@@ -10377,21 +10377,9 @@ var _user$project$Main$photoInDiv = function (ps) {
 									A2(
 										_elm_lang$core$Basics_ops['++'],
 										_user$project$Main$photoUrl(ps),
-										'\')'))
+										'\') center center no-repeat grey'))
 							},
-							_1: {
-								ctor: '::',
-								_0: {ctor: '_Tuple2', _0: 'background-repeat', _1: 'no-repeat'},
-								_1: {
-									ctor: '::',
-									_0: {ctor: '_Tuple2', _0: 'background-position', _1: 'center center'},
-									_1: {
-										ctor: '::',
-										_0: {ctor: '_Tuple2', _0: 'background-color', _1: 'grey'},
-										_1: {ctor: '[]'}
-									}
-								}
-							}
+							_1: {ctor: '[]'}
 						}
 					}
 				}),

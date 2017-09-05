@@ -1,5 +1,5 @@
 import Html exposing (Html, a, button, code, div, h1, li, text, ul)
-import Html.Attributes exposing (href, style)
+import Html.Attributes as HA exposing (href, style)
 import Html.Events exposing (onClick)
 import Http
 import Svg exposing (Svg, svg, rect, polygon)
@@ -123,7 +123,6 @@ subscriptions model =
 
 -- VIEW
 
-
 arrow : Direction -> Svg Msg
 arrow dir = polygon [ points (if (dir == Left) 
                              then "-80,-10 -80,10 -90,0" 
@@ -144,15 +143,12 @@ svgArrows = svg [ version "1.1"
                 [arrow Left, arrow Right]
 
 photoUrl : PhotoSpec -> String
-photoUrl ps = "https://farm" ++ toString ps.farm ++ ".staticflickr.com/" ++ ps.server ++ "/" ++ ps.id ++ "_" ++ ps.secret ++ ".jpg"
+photoUrl ps = "https://farm" ++ toString ps.farm ++ ".staticflickr.com/" ++ ps.server ++ "/" ++ ps.id ++ "_" ++ ps.secret ++ "_b.jpg"
 
 photoInDiv : PhotoSpec -> Html Msg
 photoInDiv ps = div [style [ ("height", "100%")
                            , ("width", "100%")
-                           , ("background", "url('" ++ photoUrl ps ++ "')")
-                           , ("background-repeat", "no-repeat")
-                           , ("background-position", "center center")
-                           , ("background-color", "grey")
+                           , ("background", "url('" ++ photoUrl ps ++ "') center center no-repeat grey")
                            ]
                     ] [svgArrows]
 
