@@ -42,9 +42,8 @@ type alias PhotoSpec = { id: String
 initPhotoSpec : String -> String -> String -> Int -> PhotoSpec
 initPhotoSpec id sec ser farm = PhotoSpec id sec ser farm Nothing
 
-decodePhotos : DC.Decoder (List PhotoSpec)
-decodePhotos =
-  DC.at ["photos", "photo"] 
+decodePhotoSpecList : DC.Decoder (List PhotoSpec)
+decodePhotoSpecList =
     (DC.list <| DC.map4 initPhotoSpec
                           ((DC.at ["id"]) DC.string) 
                           ((DC.at ["secret"]) DC.string)
@@ -52,15 +51,13 @@ decodePhotos =
                           ((DC.at ["farm"]) DC.int)     
     )
 
+decodePhotos : DC.Decoder (List PhotoSpec)
+decodePhotos =
+  DC.at ["photos", "photo"] decodePhotoSpecList
+
 decodeAlbumPhotos : DC.Decoder (List PhotoSpec)
 decodeAlbumPhotos =
-  DC.at ["photoset", "photo"] 
-    (DC.list <| DC.map4 initPhotoSpec
-                          ((DC.at ["id"]) DC.string) 
-                          ((DC.at ["secret"]) DC.string)
-                          ((DC.at ["server"]) DC.string)
-                          ((DC.at ["farm"]) DC.int)     
-    )
+  DC.at ["photoset", "photo"] decodePhotoSpecList
 
 decodePhotoSets : DC.Decoder (List (String, String))
 decodePhotoSets =
@@ -111,13 +108,13 @@ albumPhotosUrl : String -> (String, List (String, String)) -> Maybe String
 albumPhotosUrl album (uid, setList) =  
   let setForAlbum = List.head <| List.filter (\(id, name) -> name == album) setList
   in case setForAlbum of
-      Nothing -> Nothing
-      Just (id,name) -> Just(   flickrRestServices
-                             ++ "&method=flickr.photosets.getPhotos"
-                             ++ "&api_key=" ++ apiKey 
-                             ++ "&user_id=" ++ uid 
-                             ++ "&photoset_id=" ++ id
-                             ++ noJsonCallback )
+       Nothing -> Nothing
+       Just (id,name) -> Just(   flickrRestServices
+                              ++ "&method=flickr.photosets.getPhotos"
+                              ++ "&api_key=" ++ apiKey 
+                              ++ "&user_id=" ++ uid 
+                              ++ "&photoset_id=" ++ id
+                              ++ noJsonCallback )
 
 photoInfoUrl : String -> String 
 photoInfoUrl photoId = 
@@ -151,13 +148,13 @@ initModel r =
           userIdTask = Http.toTask req
 
           setsTask uid = 
-              Task.map (\s -> (uid,s)) <| Http.toTask (Http.get (photoSetsUrl uid) decodePhotoSets)
+            Task.map (\s -> (uid,s)) <| Http.toTask (Http.get (photoSetsUrl uid) decodePhotoSets)
 
           albumPhotosTask sets = 
-              let murl = albumPhotosUrl album sets
-              in case murl of
-                  Nothing -> Task.fail (Http.BadUrl <| "album not found: " ++ album)
-                  Just url -> Http.toTask (Http.get url decodeAlbumPhotos)
+            let murl = albumPhotosUrl album sets
+            in case murl of
+                 Nothing -> Task.fail (Http.BadUrl <| "album not found: " ++ album)
+                 Just url -> Http.toTask (Http.get url decodeAlbumPhotos)
 
           userPhotosTask = userIdTask |> (andThen setsTask ) |> (andThen albumPhotosTask)
       in Task.attempt SetPhotoIds userPhotosTask
@@ -260,7 +257,7 @@ svgArrows (vl,vr) =
            ]
            (al ++ ar)
 
--- https://www.flickr.com/services/api/misc.urls.html
+-- As described here: https://www.flickr.com/services/api/misc.urls.html
 photoUrl : PhotoSpec -> String
 photoUrl ps = 
      "https://farm" ++ toString ps.farm ++ ".staticflickr.com/" 
@@ -269,26 +266,25 @@ photoUrl ps =
 
 photoInDiv : (Bool, Bool) -> PhotoSpec -> Html Msg
 photoInDiv vis ps = 
-                    div [HA.style [ ("height", "100%")
-                                    , ("width", "100%")
-                                  ]
-                        ]
-                        [ div [HA.style [ ("height", "90%")
-                                        , ("width", "100%")
-                                        , ("background", "url('" ++ photoUrl ps ++ "') center center no-repeat grey")
-                                        ]
-                              ]
-                              [svgArrows vis]
+  div [HA.style [ ("height", "100%")
+                , ("width", "100%")
+                ]
+      ]
+      [ div [HA.style [ ("height", "90%")
+                      , ("width", "100%")
+                      , ("background", "url('" ++ photoUrl ps ++ "') center center no-repeat grey")
+                      ]
+            ]
+            [svgArrows vis]
 
-                        , div [HA.style [ ("height", "10%")
-                                        , ("width", "100%")
-                                        ]
-                              ]
-                              [div [HA.style [ ("text-align", "center") ] ]
-                                   [text <| Maybe.withDefault "" ps.description]
-                              ]
-
-                        ] 
+      , div [HA.style [ ("height", "10%")
+                      , ("width", "100%")
+                      ]
+            ]
+            [div [HA.style [ ("text-align", "center") ] ]
+                 [text <| Maybe.withDefault "" ps.description]
+            ]
+      ] 
 
 view : Model -> Html Msg
 view model =
@@ -301,6 +297,6 @@ view model =
               let lv = List.length (scroll.left) > 0
                   rv = List.length (scroll.right) > 1
                   cur = List.take 1 scroll.right
-              in div [HA.style [  ("overflow", "hidden"), ("height","500px"), ("width", "800px")] ] 
+              in div [HA.style [  ("overflow", "hidden"), ("height","100%"), ("width", "100%"), ("margin", "0")] ] 
                      (List.map (photoInDiv (lv,rv)) cur)
       ]

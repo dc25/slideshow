@@ -10394,6 +10394,42 @@ var _user$project$Main$initPhotoSpec = F4(
 	function (id, sec, ser, farm) {
 		return A5(_user$project$Main$PhotoSpec, id, sec, ser, farm, _elm_lang$core$Maybe$Nothing);
 	});
+var _user$project$Main$decodePhotoSpecList = _elm_lang$core$Json_Decode$list(
+	A5(
+		_elm_lang$core$Json_Decode$map4,
+		_user$project$Main$initPhotoSpec,
+		A2(
+			_elm_lang$core$Json_Decode$at,
+			{
+				ctor: '::',
+				_0: 'id',
+				_1: {ctor: '[]'}
+			},
+			_elm_lang$core$Json_Decode$string),
+		A2(
+			_elm_lang$core$Json_Decode$at,
+			{
+				ctor: '::',
+				_0: 'secret',
+				_1: {ctor: '[]'}
+			},
+			_elm_lang$core$Json_Decode$string),
+		A2(
+			_elm_lang$core$Json_Decode$at,
+			{
+				ctor: '::',
+				_0: 'server',
+				_1: {ctor: '[]'}
+			},
+			_elm_lang$core$Json_Decode$string),
+		A2(
+			_elm_lang$core$Json_Decode$at,
+			{
+				ctor: '::',
+				_0: 'farm',
+				_1: {ctor: '[]'}
+			},
+			_elm_lang$core$Json_Decode$int)));
 var _user$project$Main$decodePhotos = A2(
 	_elm_lang$core$Json_Decode$at,
 	{
@@ -10405,42 +10441,7 @@ var _user$project$Main$decodePhotos = A2(
 			_1: {ctor: '[]'}
 		}
 	},
-	_elm_lang$core$Json_Decode$list(
-		A5(
-			_elm_lang$core$Json_Decode$map4,
-			_user$project$Main$initPhotoSpec,
-			A2(
-				_elm_lang$core$Json_Decode$at,
-				{
-					ctor: '::',
-					_0: 'id',
-					_1: {ctor: '[]'}
-				},
-				_elm_lang$core$Json_Decode$string),
-			A2(
-				_elm_lang$core$Json_Decode$at,
-				{
-					ctor: '::',
-					_0: 'secret',
-					_1: {ctor: '[]'}
-				},
-				_elm_lang$core$Json_Decode$string),
-			A2(
-				_elm_lang$core$Json_Decode$at,
-				{
-					ctor: '::',
-					_0: 'server',
-					_1: {ctor: '[]'}
-				},
-				_elm_lang$core$Json_Decode$string),
-			A2(
-				_elm_lang$core$Json_Decode$at,
-				{
-					ctor: '::',
-					_0: 'farm',
-					_1: {ctor: '[]'}
-				},
-				_elm_lang$core$Json_Decode$int))));
+	_user$project$Main$decodePhotoSpecList);
 var _user$project$Main$decodeAlbumPhotos = A2(
 	_elm_lang$core$Json_Decode$at,
 	{
@@ -10452,42 +10453,7 @@ var _user$project$Main$decodeAlbumPhotos = A2(
 			_1: {ctor: '[]'}
 		}
 	},
-	_elm_lang$core$Json_Decode$list(
-		A5(
-			_elm_lang$core$Json_Decode$map4,
-			_user$project$Main$initPhotoSpec,
-			A2(
-				_elm_lang$core$Json_Decode$at,
-				{
-					ctor: '::',
-					_0: 'id',
-					_1: {ctor: '[]'}
-				},
-				_elm_lang$core$Json_Decode$string),
-			A2(
-				_elm_lang$core$Json_Decode$at,
-				{
-					ctor: '::',
-					_0: 'secret',
-					_1: {ctor: '[]'}
-				},
-				_elm_lang$core$Json_Decode$string),
-			A2(
-				_elm_lang$core$Json_Decode$at,
-				{
-					ctor: '::',
-					_0: 'server',
-					_1: {ctor: '[]'}
-				},
-				_elm_lang$core$Json_Decode$string),
-			A2(
-				_elm_lang$core$Json_Decode$at,
-				{
-					ctor: '::',
-					_0: 'farm',
-					_1: {ctor: '[]'}
-				},
-				_elm_lang$core$Json_Decode$int))));
+	_user$project$Main$decodePhotoSpecList);
 var _user$project$Main$NameAndAlbum = F2(
 	function (a, b) {
 		return {ctor: 'NameAndAlbum', _0: a, _1: b};
@@ -10726,11 +10692,15 @@ var _user$project$Main$view = function (model) {
 									_0: {ctor: '_Tuple2', _0: 'overflow', _1: 'hidden'},
 									_1: {
 										ctor: '::',
-										_0: {ctor: '_Tuple2', _0: 'height', _1: '500px'},
+										_0: {ctor: '_Tuple2', _0: 'height', _1: '100%'},
 										_1: {
 											ctor: '::',
-											_0: {ctor: '_Tuple2', _0: 'width', _1: '800px'},
-											_1: {ctor: '[]'}
+											_0: {ctor: '_Tuple2', _0: 'width', _1: '100%'},
+											_1: {
+												ctor: '::',
+												_0: {ctor: '_Tuple2', _0: 'margin', _1: '0'},
+												_1: {ctor: '[]'}
+											}
 										}
 									}
 								}),
