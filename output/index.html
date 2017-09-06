@@ -10295,6 +10295,40 @@ var _user$project$Main$albumPhotosUrl = F2(
 											A2(_elm_lang$core$Basics_ops['++'], _p4._0._0, _user$project$Main$noJsonCallback)))))))));
 		}
 	});
+var _user$project$Main$photoInfoUrl = function (photoId) {
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		_user$project$Main$flickrRestServices,
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			'&method=flickr.photos.getInfo',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'&api_key=',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_user$project$Main$apiKey,
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'&photo_id=',
+						A2(_elm_lang$core$Basics_ops['++'], photoId, _user$project$Main$noJsonCallback))))));
+};
+var _user$project$Main$decodePhotoDescription = A2(
+	_elm_lang$core$Json_Decode$at,
+	{
+		ctor: '::',
+		_0: 'photo',
+		_1: {
+			ctor: '::',
+			_0: 'description',
+			_1: {
+				ctor: '::',
+				_0: '_content',
+				_1: {ctor: '[]'}
+			}
+		}
+	},
+	_elm_lang$core$Json_Decode$string);
 var _user$project$Main$decodePhotoSets = A2(
 	_elm_lang$core$Json_Decode$at,
 	{
@@ -10352,9 +10386,13 @@ var _user$project$Main$Scroll = F2(
 var _user$project$Main$Model = function (a) {
 	return {photoIds: a};
 };
-var _user$project$Main$PhotoSpec = F4(
-	function (a, b, c, d) {
-		return {id: a, secret: b, server: c, farm: d};
+var _user$project$Main$PhotoSpec = F5(
+	function (a, b, c, d, e) {
+		return {id: a, secret: b, server: c, farm: d, description: e};
+	});
+var _user$project$Main$initPhotoSpec = F4(
+	function (id, sec, ser, farm) {
+		return A5(_user$project$Main$PhotoSpec, id, sec, ser, farm, _elm_lang$core$Maybe$Nothing);
 	});
 var _user$project$Main$decodePhotos = A2(
 	_elm_lang$core$Json_Decode$at,
@@ -10370,7 +10408,7 @@ var _user$project$Main$decodePhotos = A2(
 	_elm_lang$core$Json_Decode$list(
 		A5(
 			_elm_lang$core$Json_Decode$map4,
-			_user$project$Main$PhotoSpec,
+			_user$project$Main$initPhotoSpec,
 			A2(
 				_elm_lang$core$Json_Decode$at,
 				{
@@ -10417,7 +10455,7 @@ var _user$project$Main$decodeAlbumPhotos = A2(
 	_elm_lang$core$Json_Decode$list(
 		A5(
 			_elm_lang$core$Json_Decode$map4,
-			_user$project$Main$PhotoSpec,
+			_user$project$Main$initPhotoSpec,
 			A2(
 				_elm_lang$core$Json_Decode$at,
 				{
@@ -10472,6 +10510,30 @@ var _user$project$Main$route = _evancz$url_parser$UrlParser$oneOf(
 	});
 var _user$project$Main$Right = {ctor: 'Right'};
 var _user$project$Main$Left = {ctor: 'Left'};
+var _user$project$Main$SetCurrentDescription = function (a) {
+	return {ctor: 'SetCurrentDescription', _0: a};
+};
+var _user$project$Main$updateDescriptionCmd = function (ns) {
+	var _p5 = _elm_lang$core$List$head(ns.right);
+	if (_p5.ctor === 'Nothing') {
+		return _elm_lang$core$Platform_Cmd$none;
+	} else {
+		var _p7 = _p5._0;
+		var _p6 = _p7.description;
+		if (_p6.ctor === 'Nothing') {
+			return A2(
+				_elm_lang$core$Task$attempt,
+				_user$project$Main$SetCurrentDescription,
+				_elm_lang$http$Http$toTask(
+					A2(
+						_elm_lang$http$Http$get,
+						_user$project$Main$photoInfoUrl(_p7.id),
+						_user$project$Main$decodePhotoDescription)));
+		} else {
+			return _elm_lang$core$Platform_Cmd$none;
+		}
+	}
+};
 var _user$project$Main$ScrollPick = function (a) {
 	return {ctor: 'ScrollPick', _0: a};
 };
@@ -10495,14 +10557,14 @@ var _user$project$Main$arrow = function (dir) {
 		},
 		{ctor: '[]'});
 };
-var _user$project$Main$svgArrows = function (_p5) {
-	var _p6 = _p5;
-	var ar = _p6._1 ? {
+var _user$project$Main$svgArrows = function (_p8) {
+	var _p9 = _p8;
+	var ar = _p9._1 ? {
 		ctor: '::',
 		_0: _user$project$Main$arrow(_user$project$Main$Right),
 		_1: {ctor: '[]'}
 	} : {ctor: '[]'};
-	var al = _p6._0 ? {
+	var al = _p9._0 ? {
 		ctor: '::',
 		_0: _user$project$Main$arrow(_user$project$Main$Left),
 		_1: {ctor: '[]'}
@@ -10545,29 +10607,90 @@ var _user$project$Main$photoInDiv = F2(
 						_1: {
 							ctor: '::',
 							_0: {ctor: '_Tuple2', _0: 'width', _1: '100%'},
-							_1: {
-								ctor: '::',
-								_0: {
-									ctor: '_Tuple2',
-									_0: 'background',
-									_1: A2(
-										_elm_lang$core$Basics_ops['++'],
-										'url(\'',
-										A2(
-											_elm_lang$core$Basics_ops['++'],
-											_user$project$Main$photoUrl(ps),
-											'\') center center no-repeat grey'))
-								},
-								_1: {ctor: '[]'}
-							}
+							_1: {ctor: '[]'}
 						}
 					}),
 				_1: {ctor: '[]'}
 			},
 			{
 				ctor: '::',
-				_0: _user$project$Main$svgArrows(vis),
-				_1: {ctor: '[]'}
+				_0: A2(
+					_elm_lang$html$Html$div,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$style(
+							{
+								ctor: '::',
+								_0: {ctor: '_Tuple2', _0: 'height', _1: '90%'},
+								_1: {
+									ctor: '::',
+									_0: {ctor: '_Tuple2', _0: 'width', _1: '100%'},
+									_1: {
+										ctor: '::',
+										_0: {
+											ctor: '_Tuple2',
+											_0: 'background',
+											_1: A2(
+												_elm_lang$core$Basics_ops['++'],
+												'url(\'',
+												A2(
+													_elm_lang$core$Basics_ops['++'],
+													_user$project$Main$photoUrl(ps),
+													'\') center center no-repeat grey'))
+										},
+										_1: {ctor: '[]'}
+									}
+								}
+							}),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _user$project$Main$svgArrows(vis),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$div,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$style(
+								{
+									ctor: '::',
+									_0: {ctor: '_Tuple2', _0: 'height', _1: '10%'},
+									_1: {
+										ctor: '::',
+										_0: {ctor: '_Tuple2', _0: 'width', _1: '100%'},
+										_1: {ctor: '[]'}
+									}
+								}),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$div,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$style(
+										{
+											ctor: '::',
+											_0: {ctor: '_Tuple2', _0: 'text-align', _1: 'center'},
+											_1: {ctor: '[]'}
+										}),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text(
+										A2(_elm_lang$core$Maybe$withDefault, '', ps.description)),
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				}
 			});
 	});
 var _user$project$Main$view = function (model) {
@@ -10577,20 +10700,21 @@ var _user$project$Main$view = function (model) {
 		{
 			ctor: '::',
 			_0: function () {
-				var _p7 = model.photoIds;
-				if (_p7.ctor === 'Err') {
+				var _p10 = model.photoIds;
+				if (_p10.ctor === 'Err') {
 					return _elm_lang$html$Html$text(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
 							'Error: ',
-							_elm_lang$core$Basics$toString(_p7._0)));
+							_elm_lang$core$Basics$toString(_p10._0)));
 				} else {
-					var _p8 = _p7._0;
+					var _p11 = _p10._0;
+					var cur = A2(_elm_lang$core$List$take, 1, _p11.right);
 					var rv = _elm_lang$core$Native_Utils.cmp(
-						_elm_lang$core$List$length(_p8.right),
+						_elm_lang$core$List$length(_p11.right),
 						1) > 0;
 					var lv = _elm_lang$core$Native_Utils.cmp(
-						_elm_lang$core$List$length(_p8.left),
+						_elm_lang$core$List$length(_p11.left),
 						0) > 0;
 					return A2(
 						_elm_lang$html$Html$div,
@@ -10599,11 +10723,15 @@ var _user$project$Main$view = function (model) {
 							_0: _elm_lang$html$Html_Attributes$style(
 								{
 									ctor: '::',
-									_0: {ctor: '_Tuple2', _0: 'height', _1: '500px'},
+									_0: {ctor: '_Tuple2', _0: 'overflow', _1: 'hidden'},
 									_1: {
 										ctor: '::',
-										_0: {ctor: '_Tuple2', _0: 'width', _1: '800px'},
-										_1: {ctor: '[]'}
+										_0: {ctor: '_Tuple2', _0: 'height', _1: '500px'},
+										_1: {
+											ctor: '::',
+											_0: {ctor: '_Tuple2', _0: 'width', _1: '800px'},
+											_1: {ctor: '[]'}
+										}
 									}
 								}),
 							_1: {ctor: '[]'}
@@ -10612,7 +10740,7 @@ var _user$project$Main$view = function (model) {
 							_elm_lang$core$List$map,
 							_user$project$Main$photoInDiv(
 								{ctor: '_Tuple2', _0: lv, _1: rv}),
-							A2(_elm_lang$core$List$take, 1, _p8.right)));
+							cur));
 				}
 			}(),
 			_1: {ctor: '[]'}
@@ -10623,11 +10751,11 @@ var _user$project$Main$SetPhotoIds = function (a) {
 };
 var _user$project$Main$initModel = function (r) {
 	var cmd = function () {
-		var _p9 = r;
-		if (_p9.ctor === 'Nothing') {
+		var _p12 = r;
+		if (_p12.ctor === 'Nothing') {
 			return _elm_lang$core$Platform_Cmd$none;
 		} else {
-			if (_p9._0.ctor === 'NameOnly') {
+			if (_p12._0.ctor === 'NameOnly') {
 				var publicPhotosTask = function (uid) {
 					return _elm_lang$http$Http$toTask(
 						A2(
@@ -10637,23 +10765,23 @@ var _user$project$Main$initModel = function (r) {
 				};
 				var req = A2(
 					_elm_lang$http$Http$get,
-					_user$project$Main$userIdUrl(_p9._0._0),
+					_user$project$Main$userIdUrl(_p12._0._0),
 					_user$project$Main$decodeUserId);
 				var userIdTask = _elm_lang$http$Http$toTask(req);
 				var userPhotosTask = A2(_elm_lang$core$Task$andThen, publicPhotosTask, userIdTask);
 				return A2(_elm_lang$core$Task$attempt, _user$project$Main$SetPhotoIds, userPhotosTask);
 			} else {
-				var _p11 = _p9._0._1;
+				var _p14 = _p12._0._1;
 				var albumPhotosTask = function (sets) {
-					var murl = A2(_user$project$Main$albumPhotosUrl, _p11, sets);
-					var _p10 = murl;
-					if (_p10.ctor === 'Nothing') {
+					var murl = A2(_user$project$Main$albumPhotosUrl, _p14, sets);
+					var _p13 = murl;
+					if (_p13.ctor === 'Nothing') {
 						return _elm_lang$core$Task$fail(
 							_elm_lang$http$Http$BadUrl(
-								A2(_elm_lang$core$Basics_ops['++'], 'album not found: ', _p11)));
+								A2(_elm_lang$core$Basics_ops['++'], 'album not found: ', _p14)));
 					} else {
 						return _elm_lang$http$Http$toTask(
-							A2(_elm_lang$http$Http$get, _p10._0, _user$project$Main$decodeAlbumPhotos));
+							A2(_elm_lang$http$Http$get, _p13._0, _user$project$Main$decodeAlbumPhotos));
 					}
 				};
 				var setsTask = function (uid) {
@@ -10670,7 +10798,7 @@ var _user$project$Main$initModel = function (r) {
 				};
 				var req = A2(
 					_elm_lang$http$Http$get,
-					_user$project$Main$userIdUrl(_p9._0._0),
+					_user$project$Main$userIdUrl(_p12._0._0),
 					_user$project$Main$decodeUserId);
 				var userIdTask = _elm_lang$http$Http$toTask(req);
 				var userPhotosTask = A2(
@@ -10698,63 +10826,117 @@ var _user$project$Main$init = function (location) {
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p12 = msg;
-		switch (_p12.ctor) {
+		var _p15 = msg;
+		switch (_p15.ctor) {
 			case 'UrlChange':
 				return _user$project$Main$initModel(
-					A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Main$route, _p12._0));
+					A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Main$route, _p15._0));
 			case 'SetPhotoIds':
-				if (_p12._0.ctor === 'Ok') {
+				if (_p15._0.ctor === 'Ok') {
+					var scroll = {
+						left: {ctor: '[]'},
+						right: _p15._0._0
+					};
 					return {
 						ctor: '_Tuple2',
 						_0: _user$project$Main$Model(
-							_elm_lang$core$Result$Ok(
-								{
-									left: {ctor: '[]'},
-									right: _p12._0._0
-								})),
-						_1: _elm_lang$core$Platform_Cmd$none
+							_elm_lang$core$Result$Ok(scroll)),
+						_1: _user$project$Main$updateDescriptionCmd(scroll)
 					};
 				} else {
 					return {
 						ctor: '_Tuple2',
 						_0: _user$project$Main$Model(
-							_elm_lang$core$Result$Err(_p12._0._0)),
+							_elm_lang$core$Result$Err(_p15._0._0)),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
-			default:
-				var _p13 = model.photoIds;
-				if (_p13.ctor === 'Ok') {
-					var _p15 = _p13._0;
+			case 'ScrollPick':
+				var _p16 = model.photoIds;
+				if (_p16.ctor === 'Ok') {
+					var _p18 = _p16._0;
 					var ns = function () {
-						var _p14 = _p12._0;
-						if (_p14.ctor === 'Right') {
+						var _p17 = _p15._0;
+						if (_p17.ctor === 'Right') {
 							return {
 								left: A2(
 									_elm_lang$core$Basics_ops['++'],
-									A2(_elm_lang$core$List$take, 1, _p15.right),
-									_p15.left),
-								right: A2(_elm_lang$core$List$drop, 1, _p15.right)
+									A2(_elm_lang$core$List$take, 1, _p18.right),
+									_p18.left),
+								right: A2(_elm_lang$core$List$drop, 1, _p18.right)
 							};
 						} else {
 							return {
-								left: A2(_elm_lang$core$List$drop, 1, _p15.left),
+								left: A2(_elm_lang$core$List$drop, 1, _p18.left),
 								right: A2(
 									_elm_lang$core$Basics_ops['++'],
-									A2(_elm_lang$core$List$take, 1, _p15.left),
-									_p15.right)
+									A2(_elm_lang$core$List$take, 1, _p18.left),
+									_p18.right)
 							};
 						}
 					}();
+					var cmd = _user$project$Main$updateDescriptionCmd(ns);
 					return {
 						ctor: '_Tuple2',
 						_0: _user$project$Main$Model(
 							_elm_lang$core$Result$Ok(ns)),
-						_1: _elm_lang$core$Platform_Cmd$none
+						_1: cmd
 					};
 				} else {
-					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+					return {
+						ctor: '_Tuple2',
+						_0: _user$project$Main$Model(
+							_elm_lang$core$Result$Err(_p16._0)),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			default:
+				if (_p15._0.ctor === 'Ok') {
+					var _p19 = model.photoIds;
+					if (_p19.ctor === 'Err') {
+						return {
+							ctor: '_Tuple2',
+							_0: _user$project$Main$Model(
+								_elm_lang$core$Result$Err(_p19._0)),
+							_1: _elm_lang$core$Platform_Cmd$none
+						};
+					} else {
+						var _p22 = _p19._0;
+						var _p20 = _elm_lang$core$List$head(_p22.right);
+						if (_p20.ctor === 'Nothing') {
+							return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+						} else {
+							var _p21 = _p20._0;
+							var described = A5(
+								_user$project$Main$PhotoSpec,
+								_p21.id,
+								_p21.secret,
+								_p21.server,
+								_p21.farm,
+								_elm_lang$core$Maybe$Just(_p15._0._0));
+							return {
+								ctor: '_Tuple2',
+								_0: _user$project$Main$Model(
+									_elm_lang$core$Result$Ok(
+										{
+											left: _p22.left,
+											right: {
+												ctor: '::',
+												_0: described,
+												_1: A2(_elm_lang$core$List$drop, 1, _p22.right)
+											}
+										})),
+								_1: _elm_lang$core$Platform_Cmd$none
+							};
+						}
+					}
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _user$project$Main$Model(
+							_elm_lang$core$Result$Err(_p15._0._0)),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
 				}
 		}
 	});

@@ -2,6 +2,7 @@ import Html exposing (Html, div, text)
 import Html.Attributes as HA 
 import Html.Events as HE 
 import Http
+import Maybe
 import Svg exposing (Svg, svg, polygon)
 import Svg.Attributes as SA 
 import List exposing (take)
@@ -35,12 +36,16 @@ type alias PhotoSpec = { id: String
                        , secret: String
                        , server: String
                        , farm: Int
+                       , description: Maybe String
                        }
+
+initPhotoSpec : String -> String -> String -> Int -> PhotoSpec
+initPhotoSpec id sec ser farm = PhotoSpec id sec ser farm Nothing
 
 decodePhotos : DC.Decoder (List PhotoSpec)
 decodePhotos =
   DC.at ["photos", "photo"] 
-    (DC.list <| DC.map4 PhotoSpec
+    (DC.list <| DC.map4 initPhotoSpec
                           ((DC.at ["id"]) DC.string) 
                           ((DC.at ["secret"]) DC.string)
                           ((DC.at ["server"]) DC.string)
@@ -50,7 +55,7 @@ decodePhotos =
 decodeAlbumPhotos : DC.Decoder (List PhotoSpec)
 decodeAlbumPhotos =
   DC.at ["photoset", "photo"] 
-    (DC.list <| DC.map4 PhotoSpec
+    (DC.list <| DC.map4 initPhotoSpec
                           ((DC.at ["id"]) DC.string) 
                           ((DC.at ["secret"]) DC.string)
                           ((DC.at ["server"]) DC.string)
@@ -64,6 +69,10 @@ decodePhotoSets =
                   ((DC.at ["id"]) DC.string) 
                   ((DC.at ["title", "_content"]) DC.string)
     )
+
+decodePhotoDescription : DC.Decoder String
+decodePhotoDescription = 
+  DC.at ["photo", "description", "_content"]  DC.string
 
 apiKey : String
 apiKey = "859b1fdf671b6419805ec3d2c7578d70"
@@ -109,6 +118,15 @@ albumPhotosUrl album (uid, setList) =
                              ++ "&user_id=" ++ uid 
                              ++ "&photoset_id=" ++ id
                              ++ noJsonCallback )
+
+photoInfoUrl : String -> String 
+photoInfoUrl photoId = 
+     flickrRestServices
+  ++ "&method=flickr.photos.getInfo"
+  ++ "&api_key=" ++ apiKey 
+  ++ "&photo_id=" ++ photoId
+  ++ noJsonCallback
+
 
 initModel : Maybe Route -> (Model, Cmd Msg)
 initModel r = 
@@ -171,6 +189,15 @@ type Msg
   =   UrlChange Navigation.Location
     | SetPhotoIds (Result Http.Error (List PhotoSpec))
     | ScrollPick Direction
+    | SetCurrentDescription (Result Http.Error String)
+
+updateDescriptionCmd : Scroll -> Cmd Msg
+updateDescriptionCmd ns =
+  case List.head (ns.right) of
+    Nothing -> Cmd.none
+    Just dp -> case (dp.description) of
+                 Nothing -> Task.attempt SetCurrentDescription (Http.toTask <| Http.get (photoInfoUrl (dp.id)) decodePhotoDescription)
+                 Just des -> Cmd.none
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -179,7 +206,8 @@ update msg model =
       initModel (Url.parseHash route location) 
 
     SetPhotoIds (Ok photoIds) ->
-      (Model (Ok {left=[], right=photoIds}), Cmd.none)
+      let scroll ={left=[], right=photoIds} 
+      in (Model (Ok scroll), updateDescriptionCmd scroll)
 
     SetPhotoIds (Err e) ->
       (Model (Err e), Cmd.none)
@@ -191,9 +219,23 @@ update msg model =
                              {left=List.take 1 s.right ++ s.left, right=List.drop 1 s.right}
                            Left ->  
                              {left=List.drop 1 s.left, right=List.take 1 s.left ++ s.right}
-                in (Model (Ok ns), Cmd.none)
+                    cmd = updateDescriptionCmd ns 
+                in (Model (Ok ns), cmd)
 
-        Err e -> (model, Cmd.none)
+        Err e -> (Model (Err e), Cmd.none)
+
+    SetCurrentDescription (Ok description) ->
+      case model.photoIds of
+        Err e -> (Model (Err e), Cmd.none)
+        Ok scroll -> 
+          case (List.head scroll.right) of
+               Nothing -> (model, Cmd.none)
+               Just ps -> 
+                 let described = PhotoSpec ps.id ps.secret ps.server ps.farm (Just description)
+                 in (Model (Ok {left = scroll.left, right = described :: List.drop 1 scroll.right}), Cmd.none)
+          
+    SetCurrentDescription (Err e) ->
+      (Model (Err e), Cmd.none)
 
 -- VIEW
 
@@ -226,12 +268,27 @@ photoUrl ps =
   ++ ps.id ++ "_" ++ ps.secret ++ "_b.jpg"
 
 photoInDiv : (Bool, Bool) -> PhotoSpec -> Html Msg
-photoInDiv vis ps = div [HA.style [ ("height", "100%")
-                                  , ("width", "100%")
-                                  , ("background", "url('" ++ photoUrl ps ++ "') center center no-repeat grey")
+photoInDiv vis ps = 
+                    div [HA.style [ ("height", "100%")
+                                    , ("width", "100%")
                                   ]
+                        ]
+                        [ div [HA.style [ ("height", "90%")
+                                        , ("width", "100%")
+                                        , ("background", "url('" ++ photoUrl ps ++ "') center center no-repeat grey")
+                                        ]
+                              ]
+                              [svgArrows vis]
+
+                        , div [HA.style [ ("height", "10%")
+                                        , ("width", "100%")
+                                        ]
+                              ]
+                              [div [HA.style [ ("text-align", "center") ] ]
+                                   [text <| Maybe.withDefault "" ps.description]
+                              ]
+
                         ] 
-                        [svgArrows vis]
 
 view : Model -> Html Msg
 view model =
@@ -243,6 +300,7 @@ view model =
           Ok scroll -> 
               let lv = List.length (scroll.left) > 0
                   rv = List.length (scroll.right) > 1
-              in div [HA.style [("height","500px"), ("width", "800px")] ] 
-                     (List.map (photoInDiv (lv,rv)) <| take 1 scroll.right)
+                  cur = List.take 1 scroll.right
+              in div [HA.style [  ("overflow", "hidden"), ("height","500px"), ("width", "800px")] ] 
+                     (List.map (photoInDiv (lv,rv)) cur)
       ]
