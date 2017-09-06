@@ -3,7 +3,7 @@ import Html.Attributes as HA
 import Html.Events as HE 
 import Http
 import Maybe
-import Svg exposing (Svg, svg, polygon)
+import Svg exposing (Svg, svg, polygon, image)
 import Svg.Attributes as SA 
 import List exposing (take)
 import Json.Decode as DC exposing (Decoder)
@@ -238,24 +238,32 @@ update msg model =
 
 arrow : Direction -> Svg Msg
 arrow dir = polygon [ SA.points (if (dir == Left) 
-                                 then "-80,-10 -80,10 -90,0" 
-                                 else "80,-10 80,10 90,0")
+                                 then "-85,-10 -85,10 -95,0" 
+                                 else "85,-10 85,10 95,0")
                     , SA.style "fill: red"
                     , HE.onClick (ScrollPick dir)
                     ] 
                     []
 
-svgArrows : (Bool, Bool) -> Html Msg
-svgArrows (vl,vr) = 
+svgArrows : (Bool, Bool) -> String -> Html Msg
+svgArrows (vl,vr) im = 
     let al = if (vl) then [arrow Left] else []
         ar = if (vr) then [arrow Right] else []
     in svg [ SA.version "1.1"
            , SA.width "100%" 
            , SA.height "100%" 
-           , SA.viewBox "-100 -100 200 200" 
+           , SA.viewBox "-100 -60 200 120" 
            , SA.preserveAspectRatio "none"
            ]
-           (al ++ ar)
+           ( [image [ SA.xlinkHref im
+                    , SA.x "-100"
+                    , SA.y "-60"
+                    , SA.width "200"
+                    , SA.height "120"
+                    ] 
+                    []
+             ] ++ al ++ ar
+           )
 
 -- As described here: https://www.flickr.com/services/api/misc.urls.html
 photoUrl : PhotoSpec -> String
@@ -268,17 +276,19 @@ photoInDiv : (Bool, Bool) -> PhotoSpec -> Html Msg
 photoInDiv vis ps = 
   div [HA.style [ ("height", "100%")
                 , ("width", "100%")
+                , ("margin", "0")
                 ]
       ]
       [ div [HA.style [ ("height", "90%")
                       , ("width", "100%")
-                      , ("background", "url('" ++ photoUrl ps ++ "') center center no-repeat grey")
+                      , ("margin", "0")
                       ]
             ]
-            [svgArrows vis]
+            [svgArrows vis (photoUrl ps)]
 
       , div [HA.style [ ("height", "10%")
                       , ("width", "100%")
+                      , ("margin", "0")
                       ]
             ]
             [div [HA.style [ ("text-align", "center") ] ]
@@ -297,6 +307,6 @@ view model =
               let lv = List.length (scroll.left) > 0
                   rv = List.length (scroll.right) > 1
                   cur = List.take 1 scroll.right
-              in div [HA.style [  ("overflow", "hidden"), ("height","100%"), ("width", "100%"), ("margin", "0")] ] 
+              in div [HA.style [  ("height","100%"), ("width", "100%"), ("margin", "0")] ] 
                      (List.map (photoInDiv (lv,rv)) cur)
       ]
