@@ -17,7 +17,7 @@ type Msg
   =   UrlChange Navigation.Location
     | SetPhotos (Result Http.Error (List Photo))
     | ScrollPick Direction
-    | SetDescription (Result Http.Error String)
+    | SetDescription (Result Http.Error (String,String))
 
 main =
   Navigation.program UrlChange
@@ -138,12 +138,14 @@ photoInfoUrl photo =
 
 -- Cmd to get visible photo's description from flickr. 
 -- Package results as SetDescription message.
+-- Save the photo id with Task.map to verify the same photo is being displayed when the response comes back.
 setDescriptionCmd : List Photo -> Cmd Msg
 setDescriptionCmd right =
   case List.head right of
     Nothing -> Cmd.none
     Just dp -> case (dp.description) of
-                 Nothing -> Task.attempt SetDescription (Http.toTask <| Http.get (photoInfoUrl (dp.id)) decodePhotoDescription)
+                 Nothing -> Task.attempt SetDescription (Task.map (\s -> (dp.id,s)) <| Http.toTask <| Http.get (photoInfoUrl (dp.id)) decodePhotoDescription)
+        
                  Just des -> Cmd.none
 
 -- Cmd to get users public photos from flickr. 
@@ -244,7 +246,7 @@ update msg model =
                 in (Ok ns, cmd)
 
     -- Update description of the currently viewed photo.
-    SetDescription (Ok desc) ->
+    SetDescription (Ok (photoid,desc)) ->
       case model of
         Err e -> (Err e, Cmd.none)
         Ok scroll -> 
@@ -252,7 +254,9 @@ update msg model =
                Nothing -> (model, Cmd.none)
                Just viewed -> 
                  let described = {viewed | description=Just desc}
-                 in (Ok { scroll | right = described :: List.drop 1 scroll.right}, Cmd.none)
+                 in if (described.id == photoid) -- caption the right photo
+                    then (Ok { scroll | right = described :: List.drop 1 scroll.right}, Cmd.none)
+                    else (model, Cmd.none)
           
     SetDescription (Err e) ->
       (Err e, Cmd.none)
