@@ -10895,30 +10895,28 @@ var _user$project$Main$update = F2(
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
 					} else {
-						var _p20 = _p17._0;
-						var _p18 = _elm_lang$core$List$head(_p20.right);
+						var _p19 = _p17._0;
+						var _p18 = _elm_lang$core$List$head(_p19.right);
 						if (_p18.ctor === 'Nothing') {
 							return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 						} else {
-							var _p19 = _p18._0;
-							var described = A5(
-								_user$project$Main$Photo,
-								_p19.id,
-								_p19.secret,
-								_p19.server,
-								_p19.farm,
-								_elm_lang$core$Maybe$Just(_p12._0._0));
+							var described = _elm_lang$core$Native_Utils.update(
+								_p18._0,
+								{
+									description: _elm_lang$core$Maybe$Just(_p12._0._0)
+								});
 							return {
 								ctor: '_Tuple2',
 								_0: _elm_lang$core$Result$Ok(
-									{
-										left: _p20.left,
-										right: {
-											ctor: '::',
-											_0: described,
-											_1: A2(_elm_lang$core$List$drop, 1, _p20.right)
-										}
-									}),
+									_elm_lang$core$Native_Utils.update(
+										_p19,
+										{
+											right: {
+												ctor: '::',
+												_0: described,
+												_1: A2(_elm_lang$core$List$drop, 1, _p19.right)
+											}
+										})),
 								_1: _elm_lang$core$Platform_Cmd$none
 							};
 						}
