@@ -10201,7 +10201,7 @@ var _user$project$Main$photoUrl = function (ps) {
 var _user$project$Main$noJsonCallback = '&format=json&nojsoncallback=1';
 var _user$project$Main$flickrRestServices = 'https://api.flickr.com/services/rest/?';
 var _user$project$Main$apiKey = '859b1fdf671b6419805ec3d2c7578d70';
-var _user$project$Main$userIdUrl = function (name) {
+var _user$project$Main$userUrl = function (name) {
 	return A2(
 		_elm_lang$core$Basics_ops['++'],
 		_user$project$Main$flickrRestServices,
@@ -10295,7 +10295,7 @@ var _user$project$Main$albumPhotosUrl = F2(
 											A2(_elm_lang$core$Basics_ops['++'], _p4._0._0, _user$project$Main$noJsonCallback)))))))));
 		}
 	});
-var _user$project$Main$photoInfoUrl = function (photoId) {
+var _user$project$Main$photoInfoUrl = function (photo) {
 	return A2(
 		_elm_lang$core$Basics_ops['++'],
 		_user$project$Main$flickrRestServices,
@@ -10311,7 +10311,7 @@ var _user$project$Main$photoInfoUrl = function (photoId) {
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						'&photo_id=',
-						A2(_elm_lang$core$Basics_ops['++'], photoId, _user$project$Main$noJsonCallback))))));
+						A2(_elm_lang$core$Basics_ops['++'], photo, _user$project$Main$noJsonCallback))))));
 };
 var _user$project$Main$decodePhotoDescription = A2(
 	_elm_lang$core$Json_Decode$at,
@@ -10367,7 +10367,7 @@ var _user$project$Main$decodePhotoSets = A2(
 					}
 				},
 				_elm_lang$core$Json_Decode$string))));
-var _user$project$Main$decodeUserId = A2(
+var _user$project$Main$decodeUser = A2(
 	_elm_lang$core$Json_Decode$at,
 	{
 		ctor: '::',
@@ -10379,18 +10379,18 @@ var _user$project$Main$decodeUserId = A2(
 		}
 	},
 	_elm_lang$core$Json_Decode$string);
-var _user$project$Main$PhotoSpec = F5(
+var _user$project$Main$Photo = F5(
 	function (a, b, c, d, e) {
 		return {id: a, secret: b, server: c, farm: d, description: e};
 	});
-var _user$project$Main$initPhotoSpec = F4(
+var _user$project$Main$initPhoto = F4(
 	function (id, sec, ser, farm) {
-		return A5(_user$project$Main$PhotoSpec, id, sec, ser, farm, _elm_lang$core$Maybe$Nothing);
+		return A5(_user$project$Main$Photo, id, sec, ser, farm, _elm_lang$core$Maybe$Nothing);
 	});
-var _user$project$Main$decodePhotoSpecList = _elm_lang$core$Json_Decode$list(
+var _user$project$Main$decodePhotoList = _elm_lang$core$Json_Decode$list(
 	A5(
 		_elm_lang$core$Json_Decode$map4,
-		_user$project$Main$initPhotoSpec,
+		_user$project$Main$initPhoto,
 		A2(
 			_elm_lang$core$Json_Decode$at,
 			{
@@ -10434,7 +10434,7 @@ var _user$project$Main$decodePhotos = A2(
 			_1: {ctor: '[]'}
 		}
 	},
-	_user$project$Main$decodePhotoSpecList);
+	_user$project$Main$decodePhotoList);
 var _user$project$Main$decodeAlbumPhotos = A2(
 	_elm_lang$core$Json_Decode$at,
 	{
@@ -10446,13 +10446,13 @@ var _user$project$Main$decodeAlbumPhotos = A2(
 			_1: {ctor: '[]'}
 		}
 	},
-	_user$project$Main$decodePhotoSpecList);
+	_user$project$Main$decodePhotoList);
 var _user$project$Main$Right = {ctor: 'Right'};
 var _user$project$Main$Left = {ctor: 'Left'};
-var _user$project$Main$SetCurrentDescription = function (a) {
-	return {ctor: 'SetCurrentDescription', _0: a};
+var _user$project$Main$SetDescription = function (a) {
+	return {ctor: 'SetDescription', _0: a};
 };
-var _user$project$Main$setCurrentDescriptionCmd = function (right) {
+var _user$project$Main$setDescriptionCmd = function (right) {
 	var _p5 = _elm_lang$core$List$head(right);
 	if (_p5.ctor === 'Nothing') {
 		return _elm_lang$core$Platform_Cmd$none;
@@ -10462,7 +10462,7 @@ var _user$project$Main$setCurrentDescriptionCmd = function (right) {
 		if (_p6.ctor === 'Nothing') {
 			return A2(
 				_elm_lang$core$Task$attempt,
-				_user$project$Main$SetCurrentDescription,
+				_user$project$Main$SetDescription,
 				_elm_lang$http$Http$toTask(
 					A2(
 						_elm_lang$http$Http$get,
@@ -10716,8 +10716,8 @@ var _user$project$Main$view = function (model) {
 			_1: {ctor: '[]'}
 		});
 };
-var _user$project$Main$SetPhotoIds = function (a) {
-	return {ctor: 'SetPhotoIds', _0: a};
+var _user$project$Main$SetPhotos = function (a) {
+	return {ctor: 'SetPhotos', _0: a};
 };
 var _user$project$Main$getPhotosCmd = function (name) {
 	var publicPhotosTask = function (uid) {
@@ -10729,11 +10729,11 @@ var _user$project$Main$getPhotosCmd = function (name) {
 	};
 	var req = A2(
 		_elm_lang$http$Http$get,
-		_user$project$Main$userIdUrl(name),
-		_user$project$Main$decodeUserId);
-	var userIdTask = _elm_lang$http$Http$toTask(req);
-	var userPhotosTask = A2(_elm_lang$core$Task$andThen, publicPhotosTask, userIdTask);
-	return A2(_elm_lang$core$Task$attempt, _user$project$Main$SetPhotoIds, userPhotosTask);
+		_user$project$Main$userUrl(name),
+		_user$project$Main$decodeUser);
+	var userTask = _elm_lang$http$Http$toTask(req);
+	var userPhotosTask = A2(_elm_lang$core$Task$andThen, publicPhotosTask, userTask);
+	return A2(_elm_lang$core$Task$attempt, _user$project$Main$SetPhotos, userPhotosTask);
 };
 var _user$project$Main$getAlbumPhotosCmd = F2(
 	function (name, album) {
@@ -10763,14 +10763,14 @@ var _user$project$Main$getAlbumPhotosCmd = F2(
 		};
 		var req = A2(
 			_elm_lang$http$Http$get,
-			_user$project$Main$userIdUrl(name),
-			_user$project$Main$decodeUserId);
-		var userIdTask = _elm_lang$http$Http$toTask(req);
+			_user$project$Main$userUrl(name),
+			_user$project$Main$decodeUser);
+		var userTask = _elm_lang$http$Http$toTask(req);
 		var userPhotosTask = A2(
 			_elm_lang$core$Task$andThen,
 			albumPhotosTask,
-			A2(_elm_lang$core$Task$andThen, setsTask, userIdTask));
-		return A2(_elm_lang$core$Task$attempt, _user$project$Main$SetPhotoIds, userPhotosTask);
+			A2(_elm_lang$core$Task$andThen, setsTask, userTask));
+		return A2(_elm_lang$core$Task$attempt, _user$project$Main$SetPhotos, userPhotosTask);
 	});
 var _user$project$Main$initModel = function (r) {
 	var cmd = function () {
@@ -10829,17 +10829,17 @@ var _user$project$Main$update = F2(
 			case 'UrlChange':
 				return _user$project$Main$initModel(
 					A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Main$route, _p12._0));
-			case 'SetPhotoIds':
+			case 'SetPhotos':
 				if (_p12._0.ctor === 'Ok') {
 					var _p13 = _p12._0._0;
-					var scroll = {
-						left: {ctor: '[]'},
-						right: _p13
-					};
 					return {
 						ctor: '_Tuple2',
-						_0: _elm_lang$core$Result$Ok(scroll),
-						_1: _user$project$Main$setCurrentDescriptionCmd(_p13)
+						_0: _elm_lang$core$Result$Ok(
+							{
+								left: {ctor: '[]'},
+								right: _p13
+							}),
+						_1: _user$project$Main$setDescriptionCmd(_p13)
 					};
 				} else {
 					return {
@@ -10878,7 +10878,7 @@ var _user$project$Main$update = F2(
 							};
 						}
 					}();
-					var cmd = _user$project$Main$setCurrentDescriptionCmd(ns.right);
+					var cmd = _user$project$Main$setDescriptionCmd(ns.right);
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Result$Ok(ns),
@@ -10902,7 +10902,7 @@ var _user$project$Main$update = F2(
 						} else {
 							var _p19 = _p18._0;
 							var described = A5(
-								_user$project$Main$PhotoSpec,
+								_user$project$Main$Photo,
 								_p19.id,
 								_p19.secret,
 								_p19.server,
