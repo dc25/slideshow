@@ -37,12 +37,14 @@ decodeUser =
   DC.at ["user", "id"] DC.string
 
 type alias Photo = { id: String
-                       , secret: String
-                       , server: String
-                       , farm: Int
-                       , description: Maybe String
-                       }
+                   , secret: String
+                   , server: String
+                   , farm: Int
+                   , description: Maybe String
+                   }
 
+-- Create a Photo record from info retrieved from flickr api.
+-- Defer extra api call needed for Description until photo displayed.
 initPhoto : String -> String -> String -> Int -> Photo
 initPhoto id sec ser farm = Photo id sec ser farm Nothing
 
@@ -55,14 +57,17 @@ decodePhotoList =
                           ((DC.at ["farm"]) DC.int)     
     )
 
+-- Decode photos from "flickr.people.getPublicPhotos" request.
 decodePhotos : DC.Decoder (List Photo)
 decodePhotos =
   DC.at ["photos", "photo"] decodePhotoList
 
+-- Decode photos from "flickr.photosets.getPhotos" request.
 decodeAlbumPhotos : DC.Decoder (List Photo)
 decodeAlbumPhotos =
   DC.at ["photoset", "photo"] decodePhotoList
 
+-- Decode names of photosets from "flickr.photosets.getList" request.
 decodePhotoSets : DC.Decoder (List (String, String))
 decodePhotoSets =
   DC.at ["photosets", "photoset"] 
@@ -71,6 +76,7 @@ decodePhotoSets =
                   ((DC.at ["title", "_content"]) DC.string)
     )
 
+-- Decode descripion of photo from "flickr.photos.getInfo" request.
 decodePhotoDescription : DC.Decoder String
 decodePhotoDescription = 
   DC.at ["photo", "description", "_content"]  DC.string
@@ -130,6 +136,8 @@ photoInfoUrl photo =
   ++ "&photo_id=" ++ photo
   ++ noJsonCallback
 
+-- Cmd to get visible photo's description from flickr. 
+-- Package results as SetDescription message.
 setDescriptionCmd : List Photo -> Cmd Msg
 setDescriptionCmd right =
   case List.head right of
@@ -138,6 +146,8 @@ setDescriptionCmd right =
                  Nothing -> Task.attempt SetDescription (Http.toTask <| Http.get (photoInfoUrl (dp.id)) decodePhotoDescription)
                  Just des -> Cmd.none
 
+-- Cmd to get users public photos from flickr. 
+-- Package results as SetPhotos message.
 getPhotosCmd : String -> Cmd Msg
 getPhotosCmd name =
   let req = Http.get (userUrl name) decodeUser 
@@ -151,6 +161,8 @@ getPhotosCmd name =
 
   in Task.attempt SetPhotos userPhotosTask
 
+-- Cmd to get public photos in named user's album from flickr. 
+-- Package results as SetPhotos message.
 getAlbumPhotosCmd : String -> String -> Cmd Msg
 getAlbumPhotosCmd name album =
   let req = Http.get (userUrl name) decodeUser 
@@ -168,6 +180,7 @@ getAlbumPhotosCmd name album =
       userPhotosTask = userTask |> (andThen setsTask ) |> (andThen albumPhotosTask)
   in Task.attempt SetPhotos userPhotosTask
 
+-- Initialize model based on URL 'routing' arguments.
 initModel : Maybe Route -> (Model, Cmd Msg)
 initModel r = 
   let cmd = case r of 
@@ -192,6 +205,7 @@ type Route
   = NameOnly String
   | NameAndAlbum String String
 
+-- Parse URL 'arguments' either to just a user or a user and album.
 route : Url.Parser (Route -> a) a
 route =
   Url.oneOf
@@ -200,7 +214,6 @@ route =
     ]
 
 -- UPDATE
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
@@ -230,17 +243,16 @@ update msg model =
                     cmd = setDescriptionCmd ns.right
                 in (Ok ns, cmd)
 
-
-    SetDescription (Ok description) ->
+    -- Update description of the currently viewed photo.
+    SetDescription (Ok desc) ->
       case model of
         Err e -> (Err e, Cmd.none)
         Ok scroll -> 
           case (List.head scroll.right) of
                Nothing -> (model, Cmd.none)
-               Just ps -> 
-                 let described = Photo ps.id ps.secret ps.server ps.farm (Just description)
-                 in (Ok { left = scroll.left
-                               , right = described :: List.drop 1 scroll.right}, Cmd.none)
+               Just viewed -> 
+                 let described = {viewed | description=Just desc}
+                 in (Ok { scroll | right = described :: List.drop 1 scroll.right}, Cmd.none)
           
     SetDescription (Err e) ->
       (Err e, Cmd.none)
@@ -278,7 +290,8 @@ imageWithArrows vl vr im =
              ] ++ al ++ ar
            )
 
--- As described here: https://www.flickr.com/services/api/misc.urls.html
+-- Compute a photo URL from a Photo record.
+-- per: https://www.flickr.com/services/api/misc.urls.html
 photoUrl : Photo -> String
 photoUrl ps = 
      "https://farm" ++ toString ps.farm ++ ".staticflickr.com/" 
