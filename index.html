@@ -10379,10 +10379,6 @@ var _user$project$Main$decodeUserId = A2(
 		}
 	},
 	_elm_lang$core$Json_Decode$string);
-var _user$project$Main$Scroll = F2(
-	function (a, b) {
-		return {left: a, right: b};
-	});
 var _user$project$Main$Model = function (a) {
 	return {photoIds: a};
 };
@@ -10454,33 +10450,13 @@ var _user$project$Main$decodeAlbumPhotos = A2(
 		}
 	},
 	_user$project$Main$decodePhotoSpecList);
-var _user$project$Main$NameAndAlbum = F2(
-	function (a, b) {
-		return {ctor: 'NameAndAlbum', _0: a, _1: b};
-	});
-var _user$project$Main$NameOnly = function (a) {
-	return {ctor: 'NameOnly', _0: a};
-};
-var _user$project$Main$route = _evancz$url_parser$UrlParser$oneOf(
-	{
-		ctor: '::',
-		_0: A2(_evancz$url_parser$UrlParser$map, _user$project$Main$NameOnly, _evancz$url_parser$UrlParser$string),
-		_1: {
-			ctor: '::',
-			_0: A2(
-				_evancz$url_parser$UrlParser$map,
-				_user$project$Main$NameAndAlbum,
-				A2(_evancz$url_parser$UrlParser_ops['</>'], _evancz$url_parser$UrlParser$string, _evancz$url_parser$UrlParser$string)),
-			_1: {ctor: '[]'}
-		}
-	});
 var _user$project$Main$Right = {ctor: 'Right'};
 var _user$project$Main$Left = {ctor: 'Left'};
 var _user$project$Main$SetCurrentDescription = function (a) {
 	return {ctor: 'SetCurrentDescription', _0: a};
 };
-var _user$project$Main$updateDescriptionCmd = function (ns) {
-	var _p5 = _elm_lang$core$List$head(ns.right);
+var _user$project$Main$setCurrentDescriptionCmd = function (right) {
+	var _p5 = _elm_lang$core$List$head(right);
 	if (_p5.ctor === 'Nothing') {
 		return _elm_lang$core$Platform_Cmd$none;
 	} else {
@@ -10523,15 +10499,14 @@ var _user$project$Main$arrow = function (dir) {
 		},
 		{ctor: '[]'});
 };
-var _user$project$Main$svgArrows = F2(
-	function (_p8, im) {
-		var _p9 = _p8;
-		var ar = _p9._1 ? {
+var _user$project$Main$imageWithArrows = F3(
+	function (vl, vr, im) {
+		var ar = vr ? {
 			ctor: '::',
 			_0: _user$project$Main$arrow(_user$project$Main$Right),
 			_1: {ctor: '[]'}
 		} : {ctor: '[]'};
-		var al = _p9._0 ? {
+		var al = vl ? {
 			ctor: '::',
 			_0: _user$project$Main$arrow(_user$project$Main$Left),
 			_1: {ctor: '[]'}
@@ -10591,8 +10566,8 @@ var _user$project$Main$svgArrows = F2(
 				},
 				A2(_elm_lang$core$Basics_ops['++'], al, ar)));
 	});
-var _user$project$Main$photoInDiv = F2(
-	function (vis, ps) {
+var _user$project$Main$photoInDiv = F3(
+	function (lv, rv, ps) {
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -10637,9 +10612,10 @@ var _user$project$Main$photoInDiv = F2(
 					},
 					{
 						ctor: '::',
-						_0: A2(
-							_user$project$Main$svgArrows,
-							vis,
+						_0: A3(
+							_user$project$Main$imageWithArrows,
+							lv,
+							rv,
 							_user$project$Main$photoUrl(ps)),
 						_1: {ctor: '[]'}
 					}),
@@ -10698,21 +10674,21 @@ var _user$project$Main$view = function (model) {
 		{
 			ctor: '::',
 			_0: function () {
-				var _p10 = model.photoIds;
-				if (_p10.ctor === 'Err') {
+				var _p8 = model.photoIds;
+				if (_p8.ctor === 'Err') {
 					return _elm_lang$html$Html$text(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
 							'Error: ',
-							_elm_lang$core$Basics$toString(_p10._0)));
+							_elm_lang$core$Basics$toString(_p8._0)));
 				} else {
-					var _p11 = _p10._0;
-					var cur = A2(_elm_lang$core$List$take, 1, _p11.right);
+					var _p9 = _p8._0;
+					var cur = A2(_elm_lang$core$List$take, 1, _p9.right);
 					var rv = _elm_lang$core$Native_Utils.cmp(
-						_elm_lang$core$List$length(_p11.right),
+						_elm_lang$core$List$length(_p9.right),
 						1) > 0;
 					var lv = _elm_lang$core$Native_Utils.cmp(
-						_elm_lang$core$List$length(_p11.left),
+						_elm_lang$core$List$length(_p9.left),
 						0) > 0;
 					return A2(
 						_elm_lang$html$Html$div,
@@ -10736,8 +10712,7 @@ var _user$project$Main$view = function (model) {
 						},
 						A2(
 							_elm_lang$core$List$map,
-							_user$project$Main$photoInDiv(
-								{ctor: '_Tuple2', _0: lv, _1: rv}),
+							A2(_user$project$Main$photoInDiv, lv, rv),
 							cur));
 				}
 			}(),
@@ -10747,63 +10722,69 @@ var _user$project$Main$view = function (model) {
 var _user$project$Main$SetPhotoIds = function (a) {
 	return {ctor: 'SetPhotoIds', _0: a};
 };
+var _user$project$Main$getPhotosCmd = function (name) {
+	var publicPhotosTask = function (uid) {
+		return _elm_lang$http$Http$toTask(
+			A2(
+				_elm_lang$http$Http$get,
+				_user$project$Main$publicPhotosUrl(uid),
+				_user$project$Main$decodePhotos));
+	};
+	var req = A2(
+		_elm_lang$http$Http$get,
+		_user$project$Main$userIdUrl(name),
+		_user$project$Main$decodeUserId);
+	var userIdTask = _elm_lang$http$Http$toTask(req);
+	var userPhotosTask = A2(_elm_lang$core$Task$andThen, publicPhotosTask, userIdTask);
+	return A2(_elm_lang$core$Task$attempt, _user$project$Main$SetPhotoIds, userPhotosTask);
+};
+var _user$project$Main$getAlbumPhotosCmd = F2(
+	function (name, album) {
+		var albumPhotosTask = function (sets) {
+			var murl = A2(_user$project$Main$albumPhotosUrl, album, sets);
+			var _p10 = murl;
+			if (_p10.ctor === 'Nothing') {
+				return _elm_lang$core$Task$fail(
+					_elm_lang$http$Http$BadUrl(
+						A2(_elm_lang$core$Basics_ops['++'], 'album not found: ', album)));
+			} else {
+				return _elm_lang$http$Http$toTask(
+					A2(_elm_lang$http$Http$get, _p10._0, _user$project$Main$decodeAlbumPhotos));
+			}
+		};
+		var setsTask = function (uid) {
+			return A2(
+				_elm_lang$core$Task$map,
+				function (s) {
+					return {ctor: '_Tuple2', _0: uid, _1: s};
+				},
+				_elm_lang$http$Http$toTask(
+					A2(
+						_elm_lang$http$Http$get,
+						_user$project$Main$photoSetsUrl(uid),
+						_user$project$Main$decodePhotoSets)));
+		};
+		var req = A2(
+			_elm_lang$http$Http$get,
+			_user$project$Main$userIdUrl(name),
+			_user$project$Main$decodeUserId);
+		var userIdTask = _elm_lang$http$Http$toTask(req);
+		var userPhotosTask = A2(
+			_elm_lang$core$Task$andThen,
+			albumPhotosTask,
+			A2(_elm_lang$core$Task$andThen, setsTask, userIdTask));
+		return A2(_elm_lang$core$Task$attempt, _user$project$Main$SetPhotoIds, userPhotosTask);
+	});
 var _user$project$Main$initModel = function (r) {
 	var cmd = function () {
-		var _p12 = r;
-		if (_p12.ctor === 'Nothing') {
+		var _p11 = r;
+		if (_p11.ctor === 'Nothing') {
 			return _elm_lang$core$Platform_Cmd$none;
 		} else {
-			if (_p12._0.ctor === 'NameOnly') {
-				var publicPhotosTask = function (uid) {
-					return _elm_lang$http$Http$toTask(
-						A2(
-							_elm_lang$http$Http$get,
-							_user$project$Main$publicPhotosUrl(uid),
-							_user$project$Main$decodePhotos));
-				};
-				var req = A2(
-					_elm_lang$http$Http$get,
-					_user$project$Main$userIdUrl(_p12._0._0),
-					_user$project$Main$decodeUserId);
-				var userIdTask = _elm_lang$http$Http$toTask(req);
-				var userPhotosTask = A2(_elm_lang$core$Task$andThen, publicPhotosTask, userIdTask);
-				return A2(_elm_lang$core$Task$attempt, _user$project$Main$SetPhotoIds, userPhotosTask);
+			if (_p11._0.ctor === 'NameOnly') {
+				return _user$project$Main$getPhotosCmd(_p11._0._0);
 			} else {
-				var _p14 = _p12._0._1;
-				var albumPhotosTask = function (sets) {
-					var murl = A2(_user$project$Main$albumPhotosUrl, _p14, sets);
-					var _p13 = murl;
-					if (_p13.ctor === 'Nothing') {
-						return _elm_lang$core$Task$fail(
-							_elm_lang$http$Http$BadUrl(
-								A2(_elm_lang$core$Basics_ops['++'], 'album not found: ', _p14)));
-					} else {
-						return _elm_lang$http$Http$toTask(
-							A2(_elm_lang$http$Http$get, _p13._0, _user$project$Main$decodeAlbumPhotos));
-					}
-				};
-				var setsTask = function (uid) {
-					return A2(
-						_elm_lang$core$Task$map,
-						function (s) {
-							return {ctor: '_Tuple2', _0: uid, _1: s};
-						},
-						_elm_lang$http$Http$toTask(
-							A2(
-								_elm_lang$http$Http$get,
-								_user$project$Main$photoSetsUrl(uid),
-								_user$project$Main$decodePhotoSets)));
-				};
-				var req = A2(
-					_elm_lang$http$Http$get,
-					_user$project$Main$userIdUrl(_p12._0._0),
-					_user$project$Main$decodeUserId);
-				var userIdTask = _elm_lang$http$Http$toTask(req);
-				var userPhotosTask = A2(
-					_elm_lang$core$Task$andThen,
-					albumPhotosTask,
-					A2(_elm_lang$core$Task$andThen, setsTask, userIdTask));
-				return A2(_elm_lang$core$Task$attempt, _user$project$Main$SetPhotoIds, userPhotosTask);
+				return A2(_user$project$Main$getAlbumPhotosCmd, _p11._0._0, _p11._0._1);
 			}
 		}
 	}();
@@ -10818,110 +10799,134 @@ var _user$project$Main$initModel = function (r) {
 		_1: cmd
 	};
 };
+var _user$project$Main$UrlChange = function (a) {
+	return {ctor: 'UrlChange', _0: a};
+};
+var _user$project$Main$NameAndAlbum = F2(
+	function (a, b) {
+		return {ctor: 'NameAndAlbum', _0: a, _1: b};
+	});
+var _user$project$Main$NameOnly = function (a) {
+	return {ctor: 'NameOnly', _0: a};
+};
+var _user$project$Main$route = _evancz$url_parser$UrlParser$oneOf(
+	{
+		ctor: '::',
+		_0: A2(_evancz$url_parser$UrlParser$map, _user$project$Main$NameOnly, _evancz$url_parser$UrlParser$string),
+		_1: {
+			ctor: '::',
+			_0: A2(
+				_evancz$url_parser$UrlParser$map,
+				_user$project$Main$NameAndAlbum,
+				A2(_evancz$url_parser$UrlParser_ops['</>'], _evancz$url_parser$UrlParser$string, _evancz$url_parser$UrlParser$string)),
+			_1: {ctor: '[]'}
+		}
+	});
 var _user$project$Main$init = function (location) {
 	return _user$project$Main$initModel(
 		A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Main$route, location));
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p15 = msg;
-		switch (_p15.ctor) {
+		var _p12 = msg;
+		switch (_p12.ctor) {
 			case 'UrlChange':
 				return _user$project$Main$initModel(
-					A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Main$route, _p15._0));
+					A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Main$route, _p12._0));
 			case 'SetPhotoIds':
-				if (_p15._0.ctor === 'Ok') {
+				if (_p12._0.ctor === 'Ok') {
+					var _p13 = _p12._0._0;
 					var scroll = {
 						left: {ctor: '[]'},
-						right: _p15._0._0
+						right: _p13
 					};
 					return {
 						ctor: '_Tuple2',
 						_0: _user$project$Main$Model(
 							_elm_lang$core$Result$Ok(scroll)),
-						_1: _user$project$Main$updateDescriptionCmd(scroll)
+						_1: _user$project$Main$setCurrentDescriptionCmd(_p13)
 					};
 				} else {
 					return {
 						ctor: '_Tuple2',
 						_0: _user$project$Main$Model(
-							_elm_lang$core$Result$Err(_p15._0._0)),
+							_elm_lang$core$Result$Err(_p12._0._0)),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			case 'ScrollPick':
-				var _p16 = model.photoIds;
-				if (_p16.ctor === 'Ok') {
-					var _p18 = _p16._0;
+				var _p14 = model.photoIds;
+				if (_p14.ctor === 'Err') {
+					return {
+						ctor: '_Tuple2',
+						_0: _user$project$Main$Model(
+							_elm_lang$core$Result$Err(_p14._0)),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					var _p16 = _p14._0;
 					var ns = function () {
-						var _p17 = _p15._0;
-						if (_p17.ctor === 'Right') {
+						var _p15 = _p12._0;
+						if (_p15.ctor === 'Right') {
 							return {
 								left: A2(
 									_elm_lang$core$Basics_ops['++'],
-									A2(_elm_lang$core$List$take, 1, _p18.right),
-									_p18.left),
-								right: A2(_elm_lang$core$List$drop, 1, _p18.right)
+									A2(_elm_lang$core$List$take, 1, _p16.right),
+									_p16.left),
+								right: A2(_elm_lang$core$List$drop, 1, _p16.right)
 							};
 						} else {
 							return {
-								left: A2(_elm_lang$core$List$drop, 1, _p18.left),
+								left: A2(_elm_lang$core$List$drop, 1, _p16.left),
 								right: A2(
 									_elm_lang$core$Basics_ops['++'],
-									A2(_elm_lang$core$List$take, 1, _p18.left),
-									_p18.right)
+									A2(_elm_lang$core$List$take, 1, _p16.left),
+									_p16.right)
 							};
 						}
 					}();
-					var cmd = _user$project$Main$updateDescriptionCmd(ns);
+					var cmd = _user$project$Main$setCurrentDescriptionCmd(ns.right);
 					return {
 						ctor: '_Tuple2',
 						_0: _user$project$Main$Model(
 							_elm_lang$core$Result$Ok(ns)),
 						_1: cmd
 					};
-				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _user$project$Main$Model(
-							_elm_lang$core$Result$Err(_p16._0)),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
 				}
 			default:
-				if (_p15._0.ctor === 'Ok') {
-					var _p19 = model.photoIds;
-					if (_p19.ctor === 'Err') {
+				if (_p12._0.ctor === 'Ok') {
+					var _p17 = model.photoIds;
+					if (_p17.ctor === 'Err') {
 						return {
 							ctor: '_Tuple2',
 							_0: _user$project$Main$Model(
-								_elm_lang$core$Result$Err(_p19._0)),
+								_elm_lang$core$Result$Err(_p17._0)),
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
 					} else {
-						var _p22 = _p19._0;
-						var _p20 = _elm_lang$core$List$head(_p22.right);
-						if (_p20.ctor === 'Nothing') {
+						var _p20 = _p17._0;
+						var _p18 = _elm_lang$core$List$head(_p20.right);
+						if (_p18.ctor === 'Nothing') {
 							return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 						} else {
-							var _p21 = _p20._0;
+							var _p19 = _p18._0;
 							var described = A5(
 								_user$project$Main$PhotoSpec,
-								_p21.id,
-								_p21.secret,
-								_p21.server,
-								_p21.farm,
-								_elm_lang$core$Maybe$Just(_p15._0._0));
+								_p19.id,
+								_p19.secret,
+								_p19.server,
+								_p19.farm,
+								_elm_lang$core$Maybe$Just(_p12._0._0));
 							return {
 								ctor: '_Tuple2',
 								_0: _user$project$Main$Model(
 									_elm_lang$core$Result$Ok(
 										{
-											left: _p22.left,
+											left: _p20.left,
 											right: {
 												ctor: '::',
 												_0: described,
-												_1: A2(_elm_lang$core$List$drop, 1, _p22.right)
+												_1: A2(_elm_lang$core$List$drop, 1, _p20.right)
 											}
 										})),
 								_1: _elm_lang$core$Platform_Cmd$none
@@ -10932,15 +10937,12 @@ var _user$project$Main$update = F2(
 					return {
 						ctor: '_Tuple2',
 						_0: _user$project$Main$Model(
-							_elm_lang$core$Result$Err(_p15._0._0)),
+							_elm_lang$core$Result$Err(_p12._0._0)),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 		}
 	});
-var _user$project$Main$UrlChange = function (a) {
-	return {ctor: 'UrlChange', _0: a};
-};
 var _user$project$Main$main = A2(
 	_elm_lang$navigation$Navigation$program,
 	_user$project$Main$UrlChange,
