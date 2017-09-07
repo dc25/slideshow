@@ -29,9 +29,8 @@ main =
 
 -- MODEL
 
-type alias Model =
-  { photoIds : Result Http.Error {left : List PhotoSpec, right : List PhotoSpec}
-  }
+type alias Model = 
+  Result Http.Error { left : List PhotoSpec , right : List PhotoSpec}
 
 decodeUserId : DC.Decoder String
 decodeUserId =
@@ -181,7 +180,7 @@ initModel r =
     Just (NameAndAlbum name album) -> 
       getAlbumPhotosCmd name album
 
-  in (Model (Ok {left=[], right=[]}), cmd)
+  in (Ok {left=[], right=[]}, cmd)
 
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
@@ -210,14 +209,14 @@ update msg model =
 
     SetPhotoIds (Ok photoIds) ->
       let scroll ={left=[], right=photoIds} 
-      in (Model (Ok scroll), setCurrentDescriptionCmd photoIds)
+      in (Ok scroll, setCurrentDescriptionCmd photoIds)
 
     SetPhotoIds (Err e) ->
-      (Model (Err e), Cmd.none)
+      (Err e, Cmd.none)
 
     ScrollPick dir ->
-      case model.photoIds of
-        Err e -> (Model (Err e), Cmd.none)
+      case model of
+        Err e -> (Err e, Cmd.none)
         Ok s -> let ns = case dir of
                            Right -> 
                              { left=List.take 1 s.right ++ s.left
@@ -228,22 +227,22 @@ update msg model =
                              , right=List.take 1 s.left ++ s.right}
 
                     cmd = setCurrentDescriptionCmd ns.right
-                in (Model (Ok ns), cmd)
+                in (Ok ns, cmd)
 
 
     SetCurrentDescription (Ok description) ->
-      case model.photoIds of
-        Err e -> (Model (Err e), Cmd.none)
+      case model of
+        Err e -> (Err e, Cmd.none)
         Ok scroll -> 
           case (List.head scroll.right) of
                Nothing -> (model, Cmd.none)
                Just ps -> 
                  let described = PhotoSpec ps.id ps.secret ps.server ps.farm (Just description)
-                 in (Model (Ok { left = scroll.left
-                               , right = described :: List.drop 1 scroll.right}), Cmd.none)
+                 in (Ok { left = scroll.left
+                               , right = described :: List.drop 1 scroll.right}, Cmd.none)
           
     SetCurrentDescription (Err e) ->
-      (Model (Err e), Cmd.none)
+      (Err e, Cmd.none)
 
 -- VIEW
 
@@ -314,7 +313,7 @@ photoInDiv lv rv ps =
 view : Model -> Html Msg
 view model =
   div []
-      [ case model.photoIds of
+      [ case model of
           Err s -> 
               text ("Error: " ++ (toString s))
 
