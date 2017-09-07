@@ -4,3 +4,5 @@ A web-app that retrieves photos from flickr and displays them along with buttons
 
 Coded in Elm
 
+demo: https://dc25.github.io/askMetaGallery/#/dave20477
+
