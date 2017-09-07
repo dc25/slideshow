@@ -10463,11 +10463,16 @@ var _user$project$Main$setDescriptionCmd = function (right) {
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_user$project$Main$SetDescription,
-				_elm_lang$http$Http$toTask(
-					A2(
-						_elm_lang$http$Http$get,
-						_user$project$Main$photoInfoUrl(_p7.id),
-						_user$project$Main$decodePhotoDescription)));
+				A2(
+					_elm_lang$core$Task$map,
+					function (s) {
+						return {ctor: '_Tuple2', _0: _p7.id, _1: s};
+					},
+					_elm_lang$http$Http$toTask(
+						A2(
+							_elm_lang$http$Http$get,
+							_user$project$Main$photoInfoUrl(_p7.id),
+							_user$project$Main$decodePhotoDescription))));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
@@ -10903,9 +10908,9 @@ var _user$project$Main$update = F2(
 							var described = _elm_lang$core$Native_Utils.update(
 								_p18._0,
 								{
-									description: _elm_lang$core$Maybe$Just(_p12._0._0)
+									description: _elm_lang$core$Maybe$Just(_p12._0._0._1)
 								});
-							return {
+							return _elm_lang$core$Native_Utils.eq(described.id, _p12._0._0._0) ? {
 								ctor: '_Tuple2',
 								_0: _elm_lang$core$Result$Ok(
 									_elm_lang$core$Native_Utils.update(
@@ -10918,7 +10923,7 @@ var _user$project$Main$update = F2(
 											}
 										})),
 								_1: _elm_lang$core$Platform_Cmd$none
-							};
+							} : {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 						}
 					}
 				} else {
