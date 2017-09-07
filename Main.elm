@@ -11,6 +11,14 @@ import Task exposing (andThen)
 import Navigation
 import UrlParser as Url exposing ((</>))
 
+type Direction = Left | Right
+
+type Msg
+  =   UrlChange Navigation.Location
+    | SetPhotoIds (Result Http.Error (List PhotoSpec))
+    | ScrollPick Direction
+    | SetCurrentDescription (Result Http.Error String)
+
 main =
   Navigation.program UrlChange
     { init = init
@@ -21,11 +29,8 @@ main =
 
 -- MODEL
 
-type alias Scroll 
-  = {left : List PhotoSpec, right : List PhotoSpec}
-
 type alias Model =
-  { photoIds : Result Http.Error Scroll
+  { photoIds : Result Http.Error {left : List PhotoSpec, right : List PhotoSpec}
   }
 
 decodeUserId : DC.Decoder String
@@ -71,6 +76,8 @@ decodePhotoDescription : DC.Decoder String
 decodePhotoDescription = 
   DC.at ["photo", "description", "_content"]  DC.string
 
+-- api key from flickr.  Anyone who clones this project should
+-- get their own api key.
 apiKey : String
 apiKey = "859b1fdf671b6419805ec3d2c7578d70"
 
@@ -124,6 +131,43 @@ photoInfoUrl photoId =
   ++ "&photo_id=" ++ photoId
   ++ noJsonCallback
 
+setCurrentDescriptionCmd : List PhotoSpec -> Cmd Msg
+setCurrentDescriptionCmd right =
+  case List.head right of
+    Nothing -> Cmd.none
+    Just dp -> case (dp.description) of
+                 Nothing -> Task.attempt SetCurrentDescription (Http.toTask <| Http.get (photoInfoUrl (dp.id)) decodePhotoDescription)
+                 Just des -> Cmd.none
+
+getPhotosCmd : String -> Cmd Msg
+getPhotosCmd name =
+  let req = Http.get (userIdUrl name) decodeUserId 
+
+      userIdTask = Http.toTask req
+
+      publicPhotosTask uid = 
+          Http.toTask (Http.get (publicPhotosUrl uid) decodePhotos)
+
+      userPhotosTask = userIdTask |> (andThen publicPhotosTask )
+
+  in Task.attempt SetPhotoIds userPhotosTask
+
+getAlbumPhotosCmd : String -> String -> Cmd Msg
+getAlbumPhotosCmd name album =
+  let req = Http.get (userIdUrl name) decodeUserId 
+      userIdTask = Http.toTask req
+
+      setsTask uid = 
+        Task.map (\s -> (uid,s)) <| Http.toTask (Http.get (photoSetsUrl uid) decodePhotoSets)
+
+      albumPhotosTask sets = 
+        let murl = albumPhotosUrl album sets
+        in case murl of
+             Nothing -> Task.fail (Http.BadUrl <| "album not found: " ++ album)
+             Just url -> Http.toTask (Http.get url decodeAlbumPhotos)
+
+      userPhotosTask = userIdTask |> (andThen setsTask ) |> (andThen albumPhotosTask)
+  in Task.attempt SetPhotoIds userPhotosTask
 
 initModel : Maybe Route -> (Model, Cmd Msg)
 initModel r = 
@@ -132,32 +176,10 @@ initModel r =
       Cmd.none
 
     Just (NameOnly name) -> 
-      let req = Http.get (userIdUrl name) decodeUserId 
-
-          userIdTask = Http.toTask req
-
-          publicPhotosTask uid = 
-              Http.toTask (Http.get (publicPhotosUrl uid) decodePhotos)
-
-          userPhotosTask = userIdTask |> (andThen publicPhotosTask )
-
-      in Task.attempt SetPhotoIds userPhotosTask
+      getPhotosCmd name
 
     Just (NameAndAlbum name album) -> 
-      let req = Http.get (userIdUrl name) decodeUserId 
-          userIdTask = Http.toTask req
-
-          setsTask uid = 
-            Task.map (\s -> (uid,s)) <| Http.toTask (Http.get (photoSetsUrl uid) decodePhotoSets)
-
-          albumPhotosTask sets = 
-            let murl = albumPhotosUrl album sets
-            in case murl of
-                 Nothing -> Task.fail (Http.BadUrl <| "album not found: " ++ album)
-                 Just url -> Http.toTask (Http.get url decodeAlbumPhotos)
-
-          userPhotosTask = userIdTask |> (andThen setsTask ) |> (andThen albumPhotosTask)
-      in Task.attempt SetPhotoIds userPhotosTask
+      getAlbumPhotosCmd name album
 
   in (Model (Ok {left=[], right=[]}), cmd)
 
@@ -180,22 +202,6 @@ route =
 
 -- UPDATE
 
-type Direction = Left | Right
-
-type Msg
-  =   UrlChange Navigation.Location
-    | SetPhotoIds (Result Http.Error (List PhotoSpec))
-    | ScrollPick Direction
-    | SetCurrentDescription (Result Http.Error String)
-
-updateDescriptionCmd : Scroll -> Cmd Msg
-updateDescriptionCmd ns =
-  case List.head (ns.right) of
-    Nothing -> Cmd.none
-    Just dp -> case (dp.description) of
-                 Nothing -> Task.attempt SetCurrentDescription (Http.toTask <| Http.get (photoInfoUrl (dp.id)) decodePhotoDescription)
-                 Just des -> Cmd.none
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
@@ -204,22 +210,26 @@ update msg model =
 
     SetPhotoIds (Ok photoIds) ->
       let scroll ={left=[], right=photoIds} 
-      in (Model (Ok scroll), updateDescriptionCmd scroll)
+      in (Model (Ok scroll), setCurrentDescriptionCmd photoIds)
 
     SetPhotoIds (Err e) ->
       (Model (Err e), Cmd.none)
 
     ScrollPick dir ->
       case model.photoIds of
+        Err e -> (Model (Err e), Cmd.none)
         Ok s -> let ns = case dir of
                            Right -> 
-                             {left=List.take 1 s.right ++ s.left, right=List.drop 1 s.right}
+                             { left=List.take 1 s.right ++ s.left
+                             , right=List.drop 1 s.right}
+
                            Left ->  
-                             {left=List.drop 1 s.left, right=List.take 1 s.left ++ s.right}
-                    cmd = updateDescriptionCmd ns 
+                             { left=List.drop 1 s.left
+                             , right=List.take 1 s.left ++ s.right}
+
+                    cmd = setCurrentDescriptionCmd ns.right
                 in (Model (Ok ns), cmd)
 
-        Err e -> (Model (Err e), Cmd.none)
 
     SetCurrentDescription (Ok description) ->
       case model.photoIds of
@@ -229,13 +239,15 @@ update msg model =
                Nothing -> (model, Cmd.none)
                Just ps -> 
                  let described = PhotoSpec ps.id ps.secret ps.server ps.farm (Just description)
-                 in (Model (Ok {left = scroll.left, right = described :: List.drop 1 scroll.right}), Cmd.none)
+                 in (Model (Ok { left = scroll.left
+                               , right = described :: List.drop 1 scroll.right}), Cmd.none)
           
     SetCurrentDescription (Err e) ->
       (Model (Err e), Cmd.none)
 
 -- VIEW
 
+-- Draw a svg "arrow" (a triangle) pointing left or right.
 arrow : Direction -> Svg Msg
 arrow dir = polygon [ SA.points (if (dir == Left) 
                                  then "-85,-10 -85,10 -95,0" 
@@ -245,8 +257,9 @@ arrow dir = polygon [ SA.points (if (dir == Left)
                     ] 
                     []
 
-svgArrows : (Bool, Bool) -> String -> Html Msg
-svgArrows (vl,vr) im = 
+-- Draw an image with arrows for scrolling left or righ
+imageWithArrows : Bool -> Bool -> String -> Html Msg
+imageWithArrows vl vr im = 
     let al = if (vl) then [arrow Left] else []
         ar = if (vr) then [arrow Right] else []
     in svg [ SA.version "1.1"
@@ -272,8 +285,9 @@ photoUrl ps =
   ++ ps.server ++ "/" 
   ++ ps.id ++ "_" ++ ps.secret ++ "_b.jpg"
 
-photoInDiv : (Bool, Bool) -> PhotoSpec -> Html Msg
-photoInDiv vis ps = 
+-- show an image and description if available.
+photoInDiv : Bool -> Bool -> PhotoSpec -> Html Msg
+photoInDiv lv rv ps = 
   div [HA.style [ ("height", "100%")
                 , ("width", "100%")
                 , ("margin", "0")
@@ -284,7 +298,7 @@ photoInDiv vis ps =
                       , ("margin", "0")
                       ]
             ]
-            [svgArrows vis (photoUrl ps)]
+            [imageWithArrows lv rv (photoUrl ps)]
 
       , div [HA.style [ ("height", "10%")
                       , ("width", "100%")
@@ -296,6 +310,7 @@ photoInDiv vis ps =
             ]
       ] 
 
+-- Draw an image or display the reason the image is not available.
 view : Model -> Html Msg
 view model =
   div []
@@ -308,5 +323,5 @@ view model =
                   rv = List.length (scroll.right) > 1
                   cur = List.take 1 scroll.right
               in div [HA.style [  ("height","100%"), ("width", "100%"), ("margin", "0")] ] 
-                     (List.map (photoInDiv (lv,rv)) cur)
+                     (List.map (photoInDiv lv rv) cur)
       ]
