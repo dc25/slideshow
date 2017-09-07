@@ -4,5 +4,5 @@ A web-app that retrieves photos from flickr and displays them along with buttons
 
 Coded in Elm
 
-demo (display public photos from flicker user, dave2047) : https://dc25.github.io/askMetaGallery/#/dave20477
+demo (display public photos from flicker user, dave20477) : https://dc25.github.io/askMetaGallery/#/dave20477
 
