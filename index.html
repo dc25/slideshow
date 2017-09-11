@@ -9924,6 +9924,33 @@ var _elm_lang$svg$Svg_Attributes$additive = _elm_lang$virtual_dom$VirtualDom$att
 var _elm_lang$svg$Svg_Attributes$accumulate = _elm_lang$virtual_dom$VirtualDom$attribute('accumulate');
 var _elm_lang$svg$Svg_Attributes$accelerate = _elm_lang$virtual_dom$VirtualDom$attribute('accelerate');
 var _elm_lang$svg$Svg_Attributes$accentHeight = _elm_lang$virtual_dom$VirtualDom$attribute('accent-height');
+var _elm_lang$svg$Svg_Events$on = _elm_lang$virtual_dom$VirtualDom$on;
+var _elm_lang$svg$Svg_Events$simpleOn = F2(
+	function (name, msg) {
+		return A2(
+			_elm_lang$svg$Svg_Events$on,
+			name,
+			_elm_lang$core$Json_Decode$succeed(msg));
+	});
+var _elm_lang$svg$Svg_Events$onBegin = _elm_lang$svg$Svg_Events$simpleOn('begin');
+var _elm_lang$svg$Svg_Events$onEnd = _elm_lang$svg$Svg_Events$simpleOn('end');
+var _elm_lang$svg$Svg_Events$onRepeat = _elm_lang$svg$Svg_Events$simpleOn('repeat');
+var _elm_lang$svg$Svg_Events$onAbort = _elm_lang$svg$Svg_Events$simpleOn('abort');
+var _elm_lang$svg$Svg_Events$onError = _elm_lang$svg$Svg_Events$simpleOn('error');
+var _elm_lang$svg$Svg_Events$onResize = _elm_lang$svg$Svg_Events$simpleOn('resize');
+var _elm_lang$svg$Svg_Events$onScroll = _elm_lang$svg$Svg_Events$simpleOn('scroll');
+var _elm_lang$svg$Svg_Events$onLoad = _elm_lang$svg$Svg_Events$simpleOn('load');
+var _elm_lang$svg$Svg_Events$onUnload = _elm_lang$svg$Svg_Events$simpleOn('unload');
+var _elm_lang$svg$Svg_Events$onZoom = _elm_lang$svg$Svg_Events$simpleOn('zoom');
+var _elm_lang$svg$Svg_Events$onActivate = _elm_lang$svg$Svg_Events$simpleOn('activate');
+var _elm_lang$svg$Svg_Events$onClick = _elm_lang$svg$Svg_Events$simpleOn('click');
+var _elm_lang$svg$Svg_Events$onFocusIn = _elm_lang$svg$Svg_Events$simpleOn('focusin');
+var _elm_lang$svg$Svg_Events$onFocusOut = _elm_lang$svg$Svg_Events$simpleOn('focusout');
+var _elm_lang$svg$Svg_Events$onMouseDown = _elm_lang$svg$Svg_Events$simpleOn('mousedown');
+var _elm_lang$svg$Svg_Events$onMouseMove = _elm_lang$svg$Svg_Events$simpleOn('mousemove');
+var _elm_lang$svg$Svg_Events$onMouseOut = _elm_lang$svg$Svg_Events$simpleOn('mouseout');
+var _elm_lang$svg$Svg_Events$onMouseOver = _elm_lang$svg$Svg_Events$simpleOn('mouseover');
+var _elm_lang$svg$Svg_Events$onMouseUp = _elm_lang$svg$Svg_Events$simpleOn('mouseup');
 var _evancz$url_parser$UrlParser$toKeyValuePair = function (segment) {
 	var _p0 = A2(_elm_lang$core$String$split, '=', segment);
 	if (((_p0.ctor === '::') && (_p0._1.ctor === '::')) && (_p0._1._1.ctor === '[]')) {
@@ -10486,16 +10513,48 @@ var _user$project$Main$arrow = function (dir) {
 		_elm_lang$svg$Svg$polygon,
 		{
 			ctor: '::',
-			_0: _elm_lang$svg$Svg_Attributes$points(
-				_elm_lang$core$Native_Utils.eq(dir, _user$project$Main$Left) ? '-85,-10 -85,10 -95,0' : '85,-10 85,10 95,0'),
+			_0: _elm_lang$svg$Svg_Attributes$style('fill:#0000ff fill-opacity:0.5'),
 			_1: {
 				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$style('fill: red'),
+				_0: _elm_lang$svg$Svg_Events$onClick(
+					_user$project$Main$ScrollPick(dir)),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$html$Html_Events$onClick(
-						_user$project$Main$ScrollPick(dir)),
+					_0: _elm_lang$svg$Svg_Attributes$points(
+						_elm_lang$core$Native_Utils.eq(dir, _user$project$Main$Left) ? '-85,-10 -85,10 -95,0' : '85,-10 85,10 95,0'),
 					_1: {ctor: '[]'}
+				}
+			}
+		},
+		{ctor: '[]'});
+};
+var _user$project$Main$pickrect = function (dir) {
+	return A2(
+		_elm_lang$svg$Svg$rect,
+		{
+			ctor: '::',
+			_0: _elm_lang$svg$Svg_Attributes$x(
+				_elm_lang$core$Native_Utils.eq(dir, _user$project$Main$Left) ? '-100' : '50'),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$y('-60'),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$width('50'),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$height('120'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$style('fill-opacity:0.0'),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Events$onClick(
+									_user$project$Main$ScrollPick(dir)),
+								_1: {ctor: '[]'}
+							}
+						}
+					}
 				}
 			}
 		},
@@ -10503,16 +10562,6 @@ var _user$project$Main$arrow = function (dir) {
 };
 var _user$project$Main$imageWithArrows = F3(
 	function (vl, vr, im) {
-		var ar = vr ? {
-			ctor: '::',
-			_0: _user$project$Main$arrow(_user$project$Main$Right),
-			_1: {ctor: '[]'}
-		} : {ctor: '[]'};
-		var al = vl ? {
-			ctor: '::',
-			_0: _user$project$Main$arrow(_user$project$Main$Left),
-			_1: {ctor: '[]'}
-		} : {ctor: '[]'};
 		return A2(
 			_elm_lang$svg$Svg$svg,
 			{
@@ -10566,7 +10615,23 @@ var _user$project$Main$imageWithArrows = F3(
 						{ctor: '[]'}),
 					_1: {ctor: '[]'}
 				},
-				A2(_elm_lang$core$Basics_ops['++'], al, ar)));
+				{
+					ctor: '::',
+					_0: _user$project$Main$arrow(_user$project$Main$Left),
+					_1: {
+						ctor: '::',
+						_0: _user$project$Main$arrow(_user$project$Main$Right),
+						_1: {
+							ctor: '::',
+							_0: _user$project$Main$pickrect(_user$project$Main$Left),
+							_1: {
+								ctor: '::',
+								_0: _user$project$Main$pickrect(_user$project$Main$Right),
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				}));
 	});
 var _user$project$Main$photoInDiv = F3(
 	function (lv, rv, ps) {
@@ -10862,25 +10927,42 @@ var _user$project$Main$update = F2(
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				} else {
-					var _p16 = _p14._0;
+					var _p18 = _p14._0;
 					var ns = function () {
 						var _p15 = _p12._0;
 						if (_p15.ctor === 'Right') {
-							return {
-								left: A2(
-									_elm_lang$core$Basics_ops['++'],
-									A2(_elm_lang$core$List$take, 1, _p16.right),
-									_p16.left),
-								right: A2(_elm_lang$core$List$drop, 1, _p16.right)
-							};
+							var nxt = _elm_lang$core$List$head(
+								A2(_elm_lang$core$List$drop, 1, _p18.right));
+							var _p16 = nxt;
+							if (_p16.ctor === 'Nothing') {
+								return {
+									left: _p18.right,
+									right: _elm_lang$core$List$reverse(_p18.left)
+								};
+							} else {
+								return {
+									left: A2(
+										_elm_lang$core$Basics_ops['++'],
+										A2(_elm_lang$core$List$take, 1, _p18.right),
+										_p18.left),
+									right: A2(_elm_lang$core$List$drop, 1, _p18.right)
+								};
+							}
 						} else {
-							return {
-								left: A2(_elm_lang$core$List$drop, 1, _p16.left),
-								right: A2(
-									_elm_lang$core$Basics_ops['++'],
-									A2(_elm_lang$core$List$take, 1, _p16.left),
-									_p16.right)
-							};
+							var nxt = _elm_lang$core$List$head(_p18.left);
+							var _p17 = nxt;
+							if (_p17.ctor === 'Nothing') {
+								var rev = _elm_lang$core$List$reverse(_p18.right);
+								return {
+									left: A2(_elm_lang$core$List$drop, 1, rev),
+									right: A2(_elm_lang$core$List$take, 1, rev)
+								};
+							} else {
+								return {
+									left: A2(_elm_lang$core$List$drop, 1, _p18.left),
+									right: {ctor: '::', _0: _p17._0, _1: _p18.right}
+								};
+							}
 						}
 					}();
 					var cmd = _user$project$Main$setDescriptionCmd(ns.right);
@@ -10892,21 +10974,21 @@ var _user$project$Main$update = F2(
 				}
 			default:
 				if (_p12._0.ctor === 'Ok') {
-					var _p17 = model;
-					if (_p17.ctor === 'Err') {
+					var _p19 = model;
+					if (_p19.ctor === 'Err') {
 						return {
 							ctor: '_Tuple2',
-							_0: _elm_lang$core$Result$Err(_p17._0),
+							_0: _elm_lang$core$Result$Err(_p19._0),
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
 					} else {
-						var _p19 = _p17._0;
-						var _p18 = _elm_lang$core$List$head(_p19.right);
-						if (_p18.ctor === 'Nothing') {
+						var _p21 = _p19._0;
+						var _p20 = _elm_lang$core$List$head(_p21.right);
+						if (_p20.ctor === 'Nothing') {
 							return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 						} else {
 							var described = _elm_lang$core$Native_Utils.update(
-								_p18._0,
+								_p20._0,
 								{
 									description: _elm_lang$core$Maybe$Just(_p12._0._0._1)
 								});
@@ -10914,12 +10996,12 @@ var _user$project$Main$update = F2(
 								ctor: '_Tuple2',
 								_0: _elm_lang$core$Result$Ok(
 									_elm_lang$core$Native_Utils.update(
-										_p19,
+										_p21,
 										{
 											right: {
 												ctor: '::',
 												_0: described,
-												_1: A2(_elm_lang$core$List$drop, 1, _p19.right)
+												_1: A2(_elm_lang$core$List$drop, 1, _p21.right)
 											}
 										})),
 								_1: _elm_lang$core$Platform_Cmd$none
