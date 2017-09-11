@@ -3,8 +3,9 @@ import Html.Attributes as HA
 import Html.Events as HE 
 import Http
 import Maybe
-import Svg exposing (Svg, svg, polygon, image)
+import Svg exposing (Svg, svg, rect, polygon, image)
 import Svg.Attributes as SA 
+import Svg.Events as SE
 import List exposing (take)
 import Json.Decode as DC exposing (Decoder)
 import Task exposing (andThen)
@@ -235,13 +236,29 @@ update msg model =
         Err e -> (Err e, Cmd.none)
         Ok s -> let ns = case dir of
                            Right -> 
-                             { left=List.take 1 s.right ++ s.left
-                             , right=List.drop 1 s.right}
+                             let nxt = List.head (List.drop 1 s.right)
+                             in case nxt of
+                                  Nothing -> 
+                                    { left = s.right
+                                    , right = List.reverse s.left
+                                    }
+                                  Just n ->
+                                    { left = take 1 s.right ++ s.left
+                                    , right = List.drop 1 s.right
+                                    }
 
                            Left ->  
-                             { left=List.drop 1 s.left
-                             , right=List.take 1 s.left ++ s.right}
-
+                             let nxt = List.head s.left
+                             in case nxt of
+                                  Nothing -> 
+                                    let rev = List.reverse s.right
+                                    in { left = List.drop 1 rev
+                                       , right = List.take 1 rev
+                                       }
+                                  Just n ->
+                                    { left = List.drop 1 s.left
+                                    , right = n :: s.right
+                                    }
                     cmd = setDescriptionCmd ns.right
                 in (Ok ns, cmd)
 
@@ -265,34 +282,49 @@ update msg model =
 
 -- Draw a svg "arrow" (a triangle) pointing left or right.
 arrow : Direction -> Svg Msg
-arrow dir = polygon [ SA.points (if (dir == Left) 
+arrow dir = polygon [ 
+                    -- , SA.style "fill:blue fill-opacity:1.0"
+                    -- , SA.style "fill:#0000ff fill-opacity:\"1.0\""
+                    -- , SA.style "fill-opacity:\"1.0\""
+                    --  SA.style "fill-opacity:0.5"
+                      SA.style "fill:#0000ff fill-opacity:0.5"
+                    --- , SA.style "fill:blue "
+                    , SE.onClick (ScrollPick dir)
+                    , SA.points (if (dir == Left) 
                                  then "-85,-10 -85,10 -95,0" 
                                  else "85,-10 85,10 95,0")
-                    , SA.style "fill: red"
-                    , HE.onClick (ScrollPick dir)
+                    ] 
+                    []
+
+-- Draw a svg "arrow" (a triangle) pointing left or right.
+pickrect : Direction -> Svg Msg
+pickrect dir = rect [ SA.x (if dir == Left then "-100" else "50")
+                    , SA.y "-60"
+                    , SA.width "50"
+                    , SA.height "120"
+                    , SA.style "fill-opacity:0.0"
+                    , SE.onClick (ScrollPick dir)
                     ] 
                     []
 
 -- Draw an image with arrows for scrolling left or righ
 imageWithArrows : Bool -> Bool -> String -> Html Msg
 imageWithArrows vl vr im = 
-    let al = if (vl) then [arrow Left] else []
-        ar = if (vr) then [arrow Right] else []
-    in svg [ SA.version "1.1"
-           , SA.width "100%" 
-           , SA.height "100%" 
-           , SA.viewBox "-100 -60 200 120" 
-           , SA.preserveAspectRatio "none"
-           ]
-           ( [image [ SA.xlinkHref im
-                    , SA.x "-100"
-                    , SA.y "-60"
-                    , SA.width "200"
-                    , SA.height "120"
-                    ] 
-                    []
-             ] ++ al ++ ar
-           )
+    svg [ SA.version "1.1"
+        , SA.width "100%" 
+        , SA.height "100%" 
+        , SA.viewBox "-100 -60 200 120" 
+        , SA.preserveAspectRatio "none"
+        ]
+        ( [image [ SA.xlinkHref im
+                 , SA.x "-100"
+                 , SA.y "-60"
+                 , SA.width "200"
+                 , SA.height "120"
+                 ] 
+                 []
+          ] ++ [arrow Left, arrow Right, pickrect Left, pickrect Right]
+        )
 
 -- Compute a photo URL from a Photo record.
 -- per: https://www.flickr.com/services/api/misc.urls.html
@@ -342,3 +374,4 @@ view model =
               in div [HA.style [  ("height","100%"), ("width", "100%"), ("margin", "0")] ] 
                      (List.map (photoInDiv lv rv) cur)
       ]
+
