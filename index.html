@@ -10931,9 +10931,8 @@ var _user$project$Main$update = F2(
 					var ns = function () {
 						var _p15 = _p12._0;
 						if (_p15.ctor === 'Right') {
-							var nxt = _elm_lang$core$List$head(
+							var _p16 = _elm_lang$core$List$head(
 								A2(_elm_lang$core$List$drop, 1, _p18.right));
-							var _p16 = nxt;
 							if (_p16.ctor === 'Nothing') {
 								return {
 									left: _p18.right,
@@ -10949,8 +10948,7 @@ var _user$project$Main$update = F2(
 								};
 							}
 						} else {
-							var nxt = _elm_lang$core$List$head(_p18.left);
-							var _p17 = nxt;
+							var _p17 = _elm_lang$core$List$head(_p18.left);
 							if (_p17.ctor === 'Nothing') {
 								var rev = _elm_lang$core$List$reverse(_p18.right);
 								return {
