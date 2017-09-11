@@ -236,29 +236,28 @@ update msg model =
         Err e -> (Err e, Cmd.none)
         Ok s -> let ns = case dir of
                            Right -> 
-                             let nxt = List.head (List.drop 1 s.right)
-                             in case nxt of
-                                  Nothing -> 
-                                    { left = s.right
-                                    , right = List.reverse s.left
-                                    }
-                                  Just n ->
-                                    { left = take 1 s.right ++ s.left
-                                    , right = List.drop 1 s.right
-                                    }
+                             case List.head (List.drop 1 s.right) of
+                               Nothing -> 
+                                 { left = s.right
+                                 , right = List.reverse s.left
+                                 }
+                               Just n ->
+                                 { left = take 1 s.right ++ s.left
+                                 , right = List.drop 1 s.right
+                                 }
 
                            Left ->  
-                             let nxt = List.head s.left
-                             in case nxt of
-                                  Nothing -> 
-                                    let rev = List.reverse s.right
-                                    in { left = List.drop 1 rev
-                                       , right = List.take 1 rev
-                                       }
-                                  Just n ->
-                                    { left = List.drop 1 s.left
-                                    , right = n :: s.right
+                             case List.head s.left of
+                               Nothing -> 
+                                 let rev = List.reverse s.right
+                                 in { left = List.drop 1 rev
+                                    , right = List.take 1 rev
                                     }
+                               Just n ->
+                                 { left = List.drop 1 s.left
+                                 , right = n :: s.right
+                                 }
+
                     cmd = setDescriptionCmd ns.right
                 in (Ok ns, cmd)
 
