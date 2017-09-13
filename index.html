@@ -10406,6 +10406,10 @@ var _user$project$Main$decodeUser = A2(
 		}
 	},
 	_elm_lang$core$Json_Decode$string);
+var _user$project$Main$Model = F2(
+	function (a, b) {
+		return {photos: a, clicks: b};
+	});
 var _user$project$Main$Photo = F5(
 	function (a, b, c, d, e) {
 		return {id: a, secret: b, server: c, farm: d, description: e};
@@ -10508,60 +10512,65 @@ var _user$project$Main$setDescriptionCmd = function (right) {
 var _user$project$Main$ScrollPick = function (a) {
 	return {ctor: 'ScrollPick', _0: a};
 };
-var _user$project$Main$arrow = function (dir) {
-	return A2(
-		_elm_lang$svg$Svg$polygon,
-		{
+var _user$project$Main$arrow = F2(
+	function (fade, dir) {
+		return {
 			ctor: '::',
-			_0: _elm_lang$svg$Svg_Attributes$style('fill:#0000ff fill-opacity:0.5'),
-			_1: {
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Events$onClick(
-					_user$project$Main$ScrollPick(dir)),
-				_1: {
+			_0: A2(
+				_elm_lang$svg$Svg$polygon,
+				{
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$points(
-						_elm_lang$core$Native_Utils.eq(dir, _user$project$Main$Left) ? '-85,-10 -85,10 -95,0' : '85,-10 85,10 95,0'),
-					_1: {ctor: '[]'}
-				}
-			}
-		},
-		{ctor: '[]'});
-};
-var _user$project$Main$pickrect = function (dir) {
-	return A2(
-		_elm_lang$svg$Svg$rect,
-		{
-			ctor: '::',
-			_0: _elm_lang$svg$Svg_Attributes$x(
-				_elm_lang$core$Native_Utils.eq(dir, _user$project$Main$Left) ? '-100' : '50'),
-			_1: {
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$y('-60'),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$width('50'),
+					_0: _elm_lang$svg$Svg_Attributes$style('stroke:#202020; stroke-width:6; stroke-linecap:round; stroke-linejoin:round'),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$height('120'),
+						_0: _elm_lang$svg$Svg_Attributes$strokeOpacity(fade),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$style('fill-opacity:0.0'),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$svg$Svg_Events$onClick(
-									_user$project$Main$ScrollPick(dir)),
-								_1: {ctor: '[]'}
-							}
+							_0: _elm_lang$svg$Svg_Attributes$points(
+								_elm_lang$core$Native_Utils.eq(dir, _user$project$Main$Left) ? '-80,-15 -95,0 -80,15' : '80,-15 95,0 80,15'),
+							_1: {ctor: '[]'}
 						}
 					}
-				}
+				},
+				{ctor: '[]'}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$svg$Svg$rect,
+					{
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$x(
+							_elm_lang$core$Native_Utils.eq(dir, _user$project$Main$Left) ? '-100' : '50'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$y('-60'),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$width('50'),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Attributes$height('120'),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$svg$Svg_Attributes$fillOpacity('0.0'),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$svg$Svg_Events$onClick(
+												_user$project$Main$ScrollPick(dir)),
+											_1: {ctor: '[]'}
+										}
+									}
+								}
+							}
+						}
+					},
+					{ctor: '[]'}),
+				_1: {ctor: '[]'}
 			}
-		},
-		{ctor: '[]'});
-};
-var _user$project$Main$imageWithArrows = F3(
-	function (vl, vr, im) {
+		};
+	});
+var _user$project$Main$imageWithArrows = F2(
+	function (fade, im) {
 		return A2(
 			_elm_lang$svg$Svg$svg,
 			{
@@ -10615,26 +10624,13 @@ var _user$project$Main$imageWithArrows = F3(
 						{ctor: '[]'}),
 					_1: {ctor: '[]'}
 				},
-				{
-					ctor: '::',
-					_0: _user$project$Main$arrow(_user$project$Main$Left),
-					_1: {
-						ctor: '::',
-						_0: _user$project$Main$arrow(_user$project$Main$Right),
-						_1: {
-							ctor: '::',
-							_0: _user$project$Main$pickrect(_user$project$Main$Left),
-							_1: {
-								ctor: '::',
-								_0: _user$project$Main$pickrect(_user$project$Main$Right),
-								_1: {ctor: '[]'}
-							}
-						}
-					}
-				}));
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					A2(_user$project$Main$arrow, fade, _user$project$Main$Left),
+					A2(_user$project$Main$arrow, fade, _user$project$Main$Right))));
 	});
-var _user$project$Main$photoInDiv = F3(
-	function (lv, rv, ps) {
+var _user$project$Main$photoInDiv = F2(
+	function (fade, ps) {
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -10679,10 +10675,9 @@ var _user$project$Main$photoInDiv = F3(
 					},
 					{
 						ctor: '::',
-						_0: A3(
+						_0: A2(
 							_user$project$Main$imageWithArrows,
-							lv,
-							rv,
+							fade,
 							_user$project$Main$photoUrl(ps)),
 						_1: {ctor: '[]'}
 					}),
@@ -10741,7 +10736,7 @@ var _user$project$Main$view = function (model) {
 		{
 			ctor: '::',
 			_0: function () {
-				var _p8 = model;
+				var _p8 = model.photos;
 				if (_p8.ctor === 'Err') {
 					return _elm_lang$html$Html$text(
 						A2(
@@ -10749,14 +10744,11 @@ var _user$project$Main$view = function (model) {
 							'Error: ',
 							_elm_lang$core$Basics$toString(_p8._0)));
 				} else {
-					var _p9 = _p8._0;
-					var cur = A2(_elm_lang$core$List$take, 1, _p9.right);
-					var rv = _elm_lang$core$Native_Utils.cmp(
-						_elm_lang$core$List$length(_p9.right),
-						1) > 0;
-					var lv = _elm_lang$core$Native_Utils.cmp(
-						_elm_lang$core$List$length(_p9.left),
-						0) > 0;
+					var clicks = model.clicks;
+					var fadeCount = (_elm_lang$core$Native_Utils.cmp(clicks, 5) > 0) ? 0 : (5 - clicks);
+					var fade = _elm_lang$core$Basics$toString(
+						_elm_lang$core$Basics$toFloat(fadeCount) / 5.0);
+					var cur = A2(_elm_lang$core$List$take, 1, _p8._0.right);
 					return A2(
 						_elm_lang$html$Html$div,
 						{
@@ -10779,7 +10771,7 @@ var _user$project$Main$view = function (model) {
 						},
 						A2(
 							_elm_lang$core$List$map,
-							A2(_user$project$Main$photoInDiv, lv, rv),
+							_user$project$Main$photoInDiv(fade),
 							cur));
 				}
 			}(),
@@ -10809,14 +10801,14 @@ var _user$project$Main$getAlbumPhotosCmd = F2(
 	function (name, album) {
 		var albumPhotosTask = function (sets) {
 			var murl = A2(_user$project$Main$albumPhotosUrl, album, sets);
-			var _p10 = murl;
-			if (_p10.ctor === 'Nothing') {
+			var _p9 = murl;
+			if (_p9.ctor === 'Nothing') {
 				return _elm_lang$core$Task$fail(
 					_elm_lang$http$Http$BadUrl(
 						A2(_elm_lang$core$Basics_ops['++'], 'album not found: ', album)));
 			} else {
 				return _elm_lang$http$Http$toTask(
-					A2(_elm_lang$http$Http$get, _p10._0, _user$project$Main$decodeAlbumPhotos));
+					A2(_elm_lang$http$Http$get, _p9._0, _user$project$Main$decodeAlbumPhotos));
 			}
 		};
 		var setsTask = function (uid) {
@@ -10844,24 +10836,27 @@ var _user$project$Main$getAlbumPhotosCmd = F2(
 	});
 var _user$project$Main$initModel = function (r) {
 	var cmd = function () {
-		var _p11 = r;
-		if (_p11.ctor === 'Nothing') {
+		var _p10 = r;
+		if (_p10.ctor === 'Nothing') {
 			return _elm_lang$core$Platform_Cmd$none;
 		} else {
-			if (_p11._0.ctor === 'NameOnly') {
-				return _user$project$Main$getPhotosCmd(_p11._0._0);
+			if (_p10._0.ctor === 'NameOnly') {
+				return _user$project$Main$getPhotosCmd(_p10._0._0);
 			} else {
-				return A2(_user$project$Main$getAlbumPhotosCmd, _p11._0._0, _p11._0._1);
+				return A2(_user$project$Main$getAlbumPhotosCmd, _p10._0._0, _p10._0._1);
 			}
 		}
 	}();
 	return {
 		ctor: '_Tuple2',
-		_0: _elm_lang$core$Result$Ok(
-			{
-				left: {ctor: '[]'},
-				right: {ctor: '[]'}
-			}),
+		_0: {
+			photos: _elm_lang$core$Result$Ok(
+				{
+					left: {ctor: '[]'},
+					right: {ctor: '[]'}
+				}),
+			clicks: 0
+		},
 		_1: cmd
 	};
 };
@@ -10894,71 +10889,83 @@ var _user$project$Main$init = function (location) {
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p12 = msg;
-		switch (_p12.ctor) {
+		var _p11 = msg;
+		switch (_p11.ctor) {
 			case 'UrlChange':
 				return _user$project$Main$initModel(
-					A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Main$route, _p12._0));
+					A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Main$route, _p11._0));
 			case 'SetPhotos':
-				if (_p12._0.ctor === 'Ok') {
-					var _p13 = _p12._0._0;
+				if (_p11._0.ctor === 'Ok') {
+					var _p12 = _p11._0._0;
 					return {
 						ctor: '_Tuple2',
-						_0: _elm_lang$core$Result$Ok(
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
 							{
-								left: {ctor: '[]'},
-								right: _p13
+								photos: _elm_lang$core$Result$Ok(
+									{
+										left: {ctor: '[]'},
+										right: _p12
+									})
 							}),
-						_1: _user$project$Main$setDescriptionCmd(_p13)
+						_1: _user$project$Main$setDescriptionCmd(_p12)
 					};
 				} else {
 					return {
 						ctor: '_Tuple2',
-						_0: _elm_lang$core$Result$Err(_p12._0._0),
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								photos: _elm_lang$core$Result$Err(_p11._0._0)
+							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			case 'ScrollPick':
-				var _p14 = model;
-				if (_p14.ctor === 'Err') {
+				var _p13 = model.photos;
+				if (_p13.ctor === 'Err') {
 					return {
 						ctor: '_Tuple2',
-						_0: _elm_lang$core$Result$Err(_p14._0),
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								photos: _elm_lang$core$Result$Err(_p13._0)
+							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				} else {
-					var _p18 = _p14._0;
+					var _p17 = _p13._0;
 					var ns = function () {
-						var _p15 = _p12._0;
-						if (_p15.ctor === 'Right') {
-							var _p16 = _elm_lang$core$List$head(
-								A2(_elm_lang$core$List$drop, 1, _p18.right));
-							if (_p16.ctor === 'Nothing') {
+						var _p14 = _p11._0;
+						if (_p14.ctor === 'Right') {
+							var _p15 = _elm_lang$core$List$head(
+								A2(_elm_lang$core$List$drop, 1, _p17.right));
+							if (_p15.ctor === 'Nothing') {
 								return {
-									left: _p18.right,
-									right: _elm_lang$core$List$reverse(_p18.left)
+									left: _p17.right,
+									right: _elm_lang$core$List$reverse(_p17.left)
 								};
 							} else {
 								return {
 									left: A2(
 										_elm_lang$core$Basics_ops['++'],
-										A2(_elm_lang$core$List$take, 1, _p18.right),
-										_p18.left),
-									right: A2(_elm_lang$core$List$drop, 1, _p18.right)
+										A2(_elm_lang$core$List$take, 1, _p17.right),
+										_p17.left),
+									right: A2(_elm_lang$core$List$drop, 1, _p17.right)
 								};
 							}
 						} else {
-							var _p17 = _elm_lang$core$List$head(_p18.left);
-							if (_p17.ctor === 'Nothing') {
-								var rev = _elm_lang$core$List$reverse(_p18.right);
+							var _p16 = _elm_lang$core$List$head(_p17.left);
+							if (_p16.ctor === 'Nothing') {
+								var rev = _elm_lang$core$List$reverse(_p17.right);
 								return {
 									left: A2(_elm_lang$core$List$drop, 1, rev),
 									right: A2(_elm_lang$core$List$take, 1, rev)
 								};
 							} else {
 								return {
-									left: A2(_elm_lang$core$List$drop, 1, _p18.left),
-									right: {ctor: '::', _0: _p17._0, _1: _p18.right}
+									left: A2(_elm_lang$core$List$drop, 1, _p17.left),
+									right: {ctor: '::', _0: _p16._0, _1: _p17.right}
 								};
 							}
 						}
@@ -10966,42 +10973,52 @@ var _user$project$Main$update = F2(
 					var cmd = _user$project$Main$setDescriptionCmd(ns.right);
 					return {
 						ctor: '_Tuple2',
-						_0: _elm_lang$core$Result$Ok(ns),
+						_0: {
+							photos: _elm_lang$core$Result$Ok(ns),
+							clicks: model.clicks + 1
+						},
 						_1: cmd
 					};
 				}
 			default:
-				if (_p12._0.ctor === 'Ok') {
-					var _p19 = model;
-					if (_p19.ctor === 'Err') {
+				if (_p11._0.ctor === 'Ok') {
+					var _p18 = model.photos;
+					if (_p18.ctor === 'Err') {
 						return {
 							ctor: '_Tuple2',
-							_0: _elm_lang$core$Result$Err(_p19._0),
+							_0: {
+								photos: _elm_lang$core$Result$Err(_p18._0),
+								clicks: 0
+							},
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
 					} else {
-						var _p21 = _p19._0;
-						var _p20 = _elm_lang$core$List$head(_p21.right);
-						if (_p20.ctor === 'Nothing') {
+						var _p20 = _p18._0;
+						var _p19 = _elm_lang$core$List$head(_p20.right);
+						if (_p19.ctor === 'Nothing') {
 							return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 						} else {
 							var described = _elm_lang$core$Native_Utils.update(
-								_p20._0,
+								_p19._0,
 								{
-									description: _elm_lang$core$Maybe$Just(_p12._0._0._1)
+									description: _elm_lang$core$Maybe$Just(_p11._0._0._1)
 								});
-							return _elm_lang$core$Native_Utils.eq(described.id, _p12._0._0._0) ? {
+							return _elm_lang$core$Native_Utils.eq(described.id, _p11._0._0._0) ? {
 								ctor: '_Tuple2',
-								_0: _elm_lang$core$Result$Ok(
-									_elm_lang$core$Native_Utils.update(
-										_p21,
-										{
-											right: {
-												ctor: '::',
-												_0: described,
-												_1: A2(_elm_lang$core$List$drop, 1, _p21.right)
-											}
-										})),
+								_0: _elm_lang$core$Native_Utils.update(
+									model,
+									{
+										photos: _elm_lang$core$Result$Ok(
+											_elm_lang$core$Native_Utils.update(
+												_p20,
+												{
+													right: {
+														ctor: '::',
+														_0: described,
+														_1: A2(_elm_lang$core$List$drop, 1, _p20.right)
+													}
+												}))
+									}),
 								_1: _elm_lang$core$Platform_Cmd$none
 							} : {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 						}
@@ -11009,7 +11026,10 @@ var _user$project$Main$update = F2(
 				} else {
 					return {
 						ctor: '_Tuple2',
-						_0: _elm_lang$core$Result$Err(_p12._0._0),
+						_0: {
+							photos: _elm_lang$core$Result$Err(_p11._0._0),
+							clicks: 0
+						},
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
