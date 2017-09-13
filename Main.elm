@@ -432,8 +432,9 @@ arrow : String -> Direction -> List (Svg Msg)
 arrow fade dir =
     [ polygon
           [ 
-            SA.style "stroke:#202020; stroke-width:6; stroke-linecap:round; stroke-linejoin:round"
+            SA.style "stroke:#808080; stroke-width:6; stroke-linecap:round; stroke-linejoin:round"
           , SA.strokeOpacity fade
+          , SA.fillOpacity "0.0"
           , SA.points
               (if (dir == Left) then
                   "-80,-15 -95,0 -80,15"
