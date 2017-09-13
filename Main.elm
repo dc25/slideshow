@@ -41,9 +41,10 @@ main =
 
 
 type alias Model =
-    { photos : Result Http.Error { left : List Photo, right : List Photo } 
+    { photos : Result Http.Error { left : List Photo, right : List Photo }
     , clicks : Int
     }
+
 
 decodeUser : DC.Decoder String
 decodeUser =
@@ -306,7 +307,7 @@ initModel r =
                 Just (NameAndAlbum name album) ->
                     getAlbumPhotosCmd name album
     in
-        ({ photos = Ok { left = [], right = [] },clicks=0}, cmd )
+        ( { photos = Ok { left = [], right = [] }, clicks = 0 }, cmd )
 
 
 init : Navigation.Location -> ( Model, Cmd Msg )
@@ -346,17 +347,17 @@ update msg model =
             initModel (Url.parseHash route location)
 
         SetPhotos (Ok photos) ->
-            ( {model | photos=Ok { left = [], right = photos }}, setDescriptionCmd photos )
+            ( { model | photos = Ok { left = [], right = photos } }, setDescriptionCmd photos )
 
         SetPhotos (Err e) ->
-            ( {model | photos=Err e}, Cmd.none )
+            ( { model | photos = Err e }, Cmd.none )
 
         -- A left or right arrow was picked.  Move a photo left or right.
         -- Issue command to update the description for the displayed photo.
         ScrollPick dir ->
             case model.photos of
                 Err e ->
-                    ( {model | photos=Err e}, Cmd.none )
+                    ( { model | photos = Err e }, Cmd.none )
 
                 Ok s ->
                     let
@@ -393,13 +394,13 @@ update msg model =
                         cmd =
                             setDescriptionCmd ns.right
                     in
-                        ( {photos=Ok ns, clicks=model.clicks+1}, cmd )
+                        ( { photos = Ok ns, clicks = model.clicks + 1 }, cmd )
 
         -- Update description of the currently viewed photo.
         SetDescription (Ok ( photoid, desc )) ->
             case model.photos of
                 Err e ->
-                    ( {photos=Err e,clicks=0}, Cmd.none )
+                    ( { photos = Err e, clicks = 0 }, Cmd.none )
 
                 Ok scroll ->
                     case (List.head scroll.right) of
@@ -415,12 +416,12 @@ update msg model =
                                     (described.id == photoid)
                                     -- caption the right photo
                                 then
-                                    ( {model | photos=Ok { scroll | right = described :: List.drop 1 scroll.right }}, Cmd.none )
+                                    ( { model | photos = Ok { scroll | right = described :: List.drop 1 scroll.right } }, Cmd.none )
                                 else
                                     ( model, Cmd.none )
 
         SetDescription (Err e) ->
-            ( {photos=Err e, clicks=0}, Cmd.none )
+            ( { photos = Err e, clicks = 0 }, Cmd.none )
 
 
 
@@ -431,37 +432,37 @@ update msg model =
 arrow : String -> Direction -> List (Svg Msg)
 arrow fade dir =
     [ polygon
-          [ 
-            SA.style "stroke:#808080; stroke-width:6; stroke-linecap:round; stroke-linejoin:round"
-          , SA.strokeOpacity fade
-          , SA.fillOpacity "0.0"
-          , SA.points
-              (if (dir == Left) then
-                  "-80,-15 -95,0 -80,15"
-               else
-                  "80,-15 95,0 80,15"
-              )
-          ]
-          []
+        [ SA.style "stroke:#808080; stroke-width:6; stroke-linecap:round; stroke-linejoin:round"
+        , SA.strokeOpacity fade
+        , SA.fillOpacity "0.0"
+        , SA.points
+            (if (dir == Left) then
+                "-80,-15 -95,0 -80,15"
+             else
+                "80,-15 95,0 80,15"
+            )
+        ]
+        []
     , rect
-          [ SA.x
-              (if dir == Left then
-                  "-100"
-               else
-                  "50"
-              )
-          , SA.y "-60"
-          , SA.width "50"
-          , SA.height "120"
-          , SA.fillOpacity "0.0"
-          , SE.onClick (ScrollPick dir)
-          ]
-          []
+        [ SA.x
+            (if dir == Left then
+                "-100"
+             else
+                "50"
+            )
+        , SA.y "-60"
+        , SA.width "50"
+        , SA.height "120"
+        , SA.fillOpacity "0.0"
+        , SE.onClick (ScrollPick dir)
+        ]
+        []
     ]
 
 
 
 -- Draw an image with arrows for scrolling left or righ
+
 
 imageWithArrows : String -> String -> Html Msg
 imageWithArrows fade im =
@@ -480,8 +481,10 @@ imageWithArrows fade im =
             , SA.height "120"
             ]
             []
-         ] ++ arrow fade Left 
-           ++ arrow fade Right )
+         ]
+            ++ arrow fade Left
+            ++ arrow fade Right
+        )
 
 
 
@@ -551,9 +554,18 @@ view model =
                 let
                     cur =
                         List.take 1 scroll.right
-                    clicks = model.clicks
-                    fadeCount = if (clicks > 5) then 0 else 5-clicks
-                    fade = toString <| toFloat fadeCount / 5.0
+
+                    clicks =
+                        model.clicks
+
+                    fadeCount =
+                        if (clicks > 5) then
+                            0
+                        else
+                            5 - clicks
+
+                    fade =
+                        toString <| toFloat fadeCount / 5.0
                 in
                     div [ HA.style [ ( "height", "100%" ), ( "width", "100%" ), ( "margin", "0" ) ] ]
                         (List.map (photoInDiv fade) cur)
