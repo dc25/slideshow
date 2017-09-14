@@ -8,7 +8,7 @@ import Maybe
 import Svg exposing (Svg, svg, rect, polygon, polyline, image)
 import Svg.Attributes as SA
 import Svg.Events as SE
-import List exposing (take)
+import List exposing (head, drop, take)
 import Json.Decode as DC exposing (Decoder)
 import Task exposing (andThen)
 import Navigation
@@ -41,7 +41,7 @@ main =
 
 
 type alias Model =
-    { photos : Result Http.Error { left : List Photo, right : List Photo }
+    { photos : Result Http.Error { left : List Photo, shown : Maybe Photo, right : List Photo }
     , clicks : Int
     }
 
@@ -216,9 +216,9 @@ photoInfoUrl photo =
 -- Save the photo id with Task.map to verify the same photo is being displayed when the response comes back.
 
 
-setDescriptionCmd : List Photo -> Cmd Msg
-setDescriptionCmd right =
-    case List.head right of
+setDescriptionCmd : Maybe Photo -> Cmd Msg
+setDescriptionCmd mdp =
+    case mdp of
         Nothing ->
             Cmd.none
 
@@ -307,7 +307,7 @@ initModel r =
                 Just (NameAndAlbum name album) ->
                     getAlbumPhotosCmd name album
     in
-        ( { photos = Ok { left = [], right = [] }, clicks = 0 }, cmd )
+        ( { photos = Ok { left = [], shown = Nothing, right = [] }, clicks = 0 }, cmd )
 
 
 init : Navigation.Location -> ( Model, Cmd Msg )
@@ -346,8 +346,11 @@ update msg model =
         UrlChange location ->
             initModel (Url.parseHash route location)
 
-        SetPhotos (Ok photos) ->
-            ( { model | photos = Ok { left = [], right = photos } }, setDescriptionCmd photos )
+        SetPhotos (Ok []) ->
+            ( { model | photos = Ok { left = [], shown = Nothing, right = [] } }, Cmd.none )
+
+        SetPhotos (Ok (f :: fs)) ->
+            ( { model | photos = Ok { left = [], shown = Just f, right = fs } }, setDescriptionCmd (Just f) )
 
         SetPhotos (Err e) ->
             ( { model | photos = Err e }, Cmd.none )
@@ -359,42 +362,52 @@ update msg model =
                 Err e ->
                     ( { model | photos = Err e }, Cmd.none )
 
-                Ok s ->
-                    let
-                        ns =
-                            case dir of
-                                Right ->
-                                    case List.head (List.drop 1 s.right) of
-                                        Nothing ->
-                                            { left = s.right
-                                            , right = List.reverse s.left
-                                            }
+                Ok { right, shown, left } ->
+                    case shown of
+                        Nothing ->
+                            ( model, Cmd.none )
 
-                                        Just n ->
-                                            { left = take 1 s.right ++ s.left
-                                            , right = List.drop 1 s.right
-                                            }
+                        Just sh ->
+                            let
+                                ns =
+                                    case dir of
+                                        Right ->
+                                            case head right of
+                                                Nothing ->
+                                                    let
+                                                        rev =
+                                                            List.reverse <| sh :: left
+                                                    in
+                                                        { left = []
+                                                        , shown = head rev
+                                                        , right = drop 1 rev
+                                                        }
 
-                                Left ->
-                                    case List.head s.left of
-                                        Nothing ->
-                                            let
-                                                rev =
-                                                    List.reverse s.right
-                                            in
-                                                { left = List.drop 1 rev
-                                                , right = List.take 1 rev
-                                                }
+                                                Just nsh ->
+                                                    { left = sh :: left
+                                                    , shown = Just nsh
+                                                    , right = List.drop 1 right
+                                                    }
 
-                                        Just n ->
-                                            { left = List.drop 1 s.left
-                                            , right = n :: s.right
-                                            }
+                                        Left ->
+                                            case head left of
+                                                Nothing ->
+                                                    let
+                                                        rev =
+                                                            List.reverse <| sh :: right
+                                                    in
+                                                        { right = []
+                                                        , shown = head rev
+                                                        , left = drop 1 rev
+                                                        }
 
-                        cmd =
-                            setDescriptionCmd ns.right
-                    in
-                        ( { photos = Ok ns, clicks = model.clicks + 1 }, cmd )
+                                                Just nsh ->
+                                                    { right = sh :: right
+                                                    , shown = Just nsh
+                                                    , left = List.drop 1 left
+                                                    }
+                            in
+                                ( { photos = Ok ns, clicks = model.clicks + 1 }, setDescriptionCmd ns.shown )
 
         -- Update description of the currently viewed photo.
         SetDescription (Ok ( photoid, desc )) ->
@@ -402,21 +415,21 @@ update msg model =
                 Err e ->
                     ( { photos = Err e, clicks = 0 }, Cmd.none )
 
-                Ok scroll ->
-                    case (List.head scroll.right) of
+                Ok { left, shown, right } ->
+                    case (shown) of
                         Nothing ->
                             ( model, Cmd.none )
 
-                        Just viewed ->
+                        Just sh ->
                             let
                                 described =
-                                    { viewed | description = Just desc }
+                                    { sh | description = Just desc }
                             in
                                 if
-                                    (described.id == photoid)
                                     -- caption the right photo
+                                    (described.id == photoid)
                                 then
-                                    ( { model | photos = Ok { scroll | right = described :: List.drop 1 scroll.right } }, Cmd.none )
+                                    ( { model | photos = Ok { left = left, shown = Just described, right = right } }, Cmd.none )
                                 else
                                     ( model, Cmd.none )
 
@@ -552,9 +565,6 @@ view model =
 
             Ok scroll ->
                 let
-                    cur =
-                        List.take 1 scroll.right
-
                     clicks =
                         model.clicks
 
@@ -567,6 +577,14 @@ view model =
                     fade =
                         toString <| toFloat fadeCount / 5.0
                 in
-                    div [ HA.style [ ( "height", "100%" ), ( "width", "100%" ), ( "margin", "0" ) ] ]
-                        (List.map (photoInDiv fade) cur)
+                    div
+                        [ HA.style [ ( "height", "100%" ), ( "width", "100%" ), ( "margin", "0" ) ]
+                        ]
+                        (case scroll.shown of
+                            Nothing ->
+                                []
+
+                            Just ph ->
+                                [ photoInDiv fade ph ]
+                        )
         ]
