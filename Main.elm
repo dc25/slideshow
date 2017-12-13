@@ -301,10 +301,10 @@ initModel r =
                 Nothing ->
                     Cmd.none
 
-                Just (NameOnly name) ->
+                Just (NameOnly version name) ->
                     getPhotosCmd name
 
-                Just (NameAndAlbum name album) ->
+                Just (NameAndAlbum version name album) ->
                     getAlbumPhotosCmd name album
     in
         ( { photos = Ok { left = [], shown = Nothing, right = [] }, clicks = 0 }, cmd )
@@ -320,8 +320,8 @@ init location =
 
 
 type Route
-    = NameOnly String
-    | NameAndAlbum String String
+    = NameOnly String String
+    | NameAndAlbum String String String
 
 
 
@@ -331,8 +331,8 @@ type Route
 route : Url.Parser (Route -> a) a
 route =
     Url.oneOf
-        [ Url.map NameOnly Url.string
-        , Url.map NameAndAlbum (Url.string </> Url.string)
+        [ Url.map NameOnly (Url.string </> Url.string)
+        , Url.map NameAndAlbum (Url.string </> Url.string </> Url.string)
         ]
 
 
