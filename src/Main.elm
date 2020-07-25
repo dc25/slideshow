@@ -11,8 +11,10 @@ import Svg.Events as SE
 import List exposing (head, drop, take)
 import Json.Decode as DC exposing (Decoder)
 import Task exposing (andThen)
-import Navigation
-import UrlParser as Url exposing ((</>))
+import Browser
+import Browser.Navigation
+import Url
+import Url.Parser exposing ((</>), fragment, Parser, map, string, oneOf)
 
 
 type Direction
@@ -21,14 +23,14 @@ type Direction
 
 
 type Msg
-    = UrlChange Navigation.Location
+    = UrlChange Url.Url
     | SetPhotos (Result Http.Error (List Photo))
     | ScrollPick Direction
     | SetDescription (Result Http.Error ( String, String ))
 
 
 main =
-    Navigation.program UrlChange
+    Browser.document
         { init = init
         , view = view
         , update = update
@@ -107,7 +109,7 @@ decodePhotoSets : DC.Decoder (List ( String, String ))
 decodePhotoSets =
     DC.at [ "photosets", "photoset" ]
         (DC.list <|
-            DC.map2 (,)
+            DC.map2 (\a b -> (a,b))
                 ((DC.at [ "id" ]) DC.string)
                 ((DC.at [ "title", "_content" ]) DC.string)
         )
@@ -225,7 +227,7 @@ setDescriptionCmd mdp =
         Just dp ->
             case (dp.description) of
                 Nothing ->
-                    Task.attempt SetDescription (Task.map (\s -> ( dp.id, s )) <| Http.toTask <| Http.get (photoInfoUrl (dp.id)) decodePhotoDescription)
+                    Task.attempt SetDescription (Task.map (\s -> ( dp.id, s )) <| Http.task <| Http.get (photoInfoUrl (dp.id)) decodePhotoDescription)
 
                 Just des ->
                     Cmd.none
@@ -243,10 +245,10 @@ getPhotosCmd name =
             Http.get (userUrl name) decodeUser
 
         userTask =
-            Http.toTask req
+            Http.task req
 
         publicPhotosTask uid =
-            Http.toTask (Http.get (publicPhotosUrl uid) decodePhotos)
+            Http.task (Http.get (publicPhotosUrl uid) decodePhotos)
 
         userPhotosTask =
             userTask |> (andThen publicPhotosTask)
@@ -266,10 +268,10 @@ getAlbumPhotosCmd name album =
             Http.get (userUrl name) decodeUser
 
         userTask =
-            Http.toTask req
+            Http.task req
 
         setsTask uid =
-            Task.map (\s -> ( uid, s )) <| Http.toTask (Http.get (photoSetsUrl uid) decodePhotoSets)
+            Task.map (\s -> ( uid, s )) <| Http.task (Http.get (photoSetsUrl uid) decodePhotoSets)
 
         albumPhotosTask sets =
             let
@@ -281,7 +283,7 @@ getAlbumPhotosCmd name album =
                         Task.fail (Http.BadUrl <| "album not found: " ++ album)
 
                     Just url ->
-                        Http.toTask (Http.get url decodeAlbumPhotos)
+                        Http.task (Http.get url decodeAlbumPhotos)
 
         userPhotosTask =
             userTask |> (andThen setsTask) |> (andThen albumPhotosTask)
@@ -310,9 +312,9 @@ initModel r =
         ( { photos = Ok { left = [], shown = Nothing, right = [] }, clicks = 0 }, cmd )
 
 
-init : Navigation.Location -> ( Model, Cmd Msg )
+init : Url.Url -> ( Model, Cmd Msg )
 init location =
-    initModel (Url.parseHash route location)
+    initModel (fragment route location)
 
 
 
@@ -328,11 +330,11 @@ type Route
 -- Parse URL 'arguments' either to just a user or a user and album.
 
 
-route : Url.Parser (Route -> a) a
+route : Parser (Route -> a) a
 route =
-    Url.oneOf
-        [ Url.map NameOnly (Url.string </> Url.string)
-        , Url.map NameAndAlbum (Url.string </> Url.string </> Url.string)
+    oneOf
+        [ map NameOnly (string </> string)
+        , map NameAndAlbum (string </> string </> string)
         ]
 
 
@@ -344,7 +346,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         UrlChange location ->
-            initModel (Url.parseHash route location)
+            initModel (fragment route location)
 
         SetPhotos (Ok []) ->
             ( { model | photos = Ok { left = [], shown = Nothing, right = [] } }, Cmd.none )
@@ -508,7 +510,7 @@ imageWithArrows fade im =
 photoUrl : Photo -> String
 photoUrl ps =
     "https://farm"
-        ++ toString ps.farm
+        ++ String.fromInt ps.farm
         ++ ".staticflickr.com/"
         ++ ps.server
         ++ "/"
@@ -525,28 +527,21 @@ photoUrl ps =
 photoInDiv : String -> Photo -> Html Msg
 photoInDiv fade ps =
     div
-        [ HA.style
-            [ ( "height", "100%" )
-            , ( "width", "100%" )
-            , ( "margin", "0" )
-            ]
+        [ HA.style "height"  "100%",
+          HA.style "width"  "100%",
+          HA.style "margin" "0"
         ]
         [ div
-            [ HA.style
-                [ ( "height", "90%" )
-                , ( "width", "100%" )
-                , ( "margin", "0" )
-                ]
+            [ HA.style "height" "90%",
+              HA.style "width" "100%",
+              HA.style "margin" "0"
             ]
             [ imageWithArrows fade (photoUrl ps) ]
         , div
-            [ HA.style
-                [ ( "height", "10%" )
-                , ( "width", "100%" )
-                , ( "margin", "0" )
-                ]
-            ]
-            [ div [ HA.style [ ( "text-align", "center" ) ] ]
+            [ HA.style "height" "10%", 
+              HA.style "width" "100%", 
+              HA.style "margin" "0" ]
+            [ div [ HA.style "text-align" "center" ]
                 [ text <| Maybe.withDefault "" ps.description ]
             ]
         ]
@@ -556,35 +551,41 @@ photoInDiv fade ps =
 -- Draw an image or display the reason the image is not available.
 
 
-view : Model -> Html Msg
+view : Model -> Browser.Document Msg
 view model =
-    div []
-        [ case model.photos of
-            Err s ->
-                text ("Error: " ++ (toString s))
+    { title = "", 
+      body = [ div []
+                   [ case model.photos of
+                        Err s ->
+                            text ("Error: " ++ (String.fromInt s))
 
-            Ok scroll ->
-                let
-                    clicks =
-                        model.clicks
+                        Ok scroll ->
+                            let
+                                clicks =
+                                    model.clicks
 
-                    fadeCount =
-                        if (clicks > 5) then
-                            0
-                        else
-                            5 - clicks
+                                fadeCount =
+                                    if (clicks > 5) then
+                                        0
+                                    else
+                                        5 - clicks
 
-                    fade =
-                        toString <| toFloat fadeCount / 5.0
-                in
-                    div
-                        [ HA.style [ ( "height", "100%" ), ( "width", "100%" ), ( "margin", "0" ) ]
-                        ]
-                        (case scroll.shown of
-                            Nothing ->
-                                []
+                                fade =
+                                    String.fromInt <| toFloat fadeCount / 5.0
+                            in
+                                div
+                                    [ 
+                                        HA.style "height" "100%",
+                                        HA.style "width" "100%", 
+                                        HA.style "margin" "0" 
+                                    ]
+                                    (case scroll.shown of
+                                        Nothing ->
+                                            []
 
-                            Just ph ->
-                                [ photoInDiv fade ph ]
-                        )
-        ]
+                                        Just ph ->
+                                            [ photoInDiv fade ph ]
+                                    )
+                    ]
+             ]
+    }
